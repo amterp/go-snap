@@ -21,13 +21,16 @@ type header struct {
 // expected output.
 func parseHeader(m Markers, line string) (header, bool) {
 	prefix, suffix := m.prefix(), m.suffix()
+	// Checked before slicing: on a short line the prefix and suffix can
+	// overlap, so HasPrefix and HasSuffix can both hold while the span
+	// between them is negative.
+	if len(line) < len(prefix)+len(suffix) {
+		return header{}, false
+	}
 	if !strings.HasPrefix(line, prefix) || !strings.HasSuffix(line, suffix) {
 		return header{}, false
 	}
 	mid := line[len(prefix) : len(line)-len(suffix)]
-	if len(prefix)+len(suffix) > len(line) {
-		return header{}, false
-	}
 	fields := strings.Fields(mid)
 	if len(fields) == 0 || !nameRe.MatchString(fields[0]) {
 		return header{}, false

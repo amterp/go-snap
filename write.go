@@ -29,12 +29,14 @@ func render(sc *schema, m Markers, cases []*Case) []byte {
 		if i > 0 {
 			b.WriteString("\n")
 		}
-		writeSection(&b, m, secTitle, nil, false, c.title)
+		// Meta bodies are escaped like any other: a title is ordinary text, and
+		// nothing stops it from containing something header-shaped.
+		writeSection(&b, m, secTitle, nil, false, escapeBody(m, c.title))
 		if c.description != "" {
-			writeSection(&b, m, secDescription, nil, false, c.description)
+			writeSection(&b, m, secDescription, nil, false, escapeBody(m, c.description))
 		}
 		if c.skip != nil {
-			writeSection(&b, m, secSkip, nil, false, *c.skip)
+			writeSection(&b, m, secSkip, nil, false, escapeBody(m, *c.skip))
 		}
 		for _, name := range sc.inputOrder {
 			v, ok := c.inputs[name]
