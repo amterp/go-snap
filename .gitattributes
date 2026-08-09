@@ -1,0 +1,3 @@
+# Snapshot files are compared byte-for-byte; force LF so Windows
+# checkouts cannot silently break comparisons.
+*.snap text eol=lf

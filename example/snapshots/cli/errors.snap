@@ -1,0 +1,52 @@
+### TITLE ###
+no name is a usage error
+### DESCRIPTION ###
+Exit 2 rather than 1: nothing went wrong at runtime, the invocation was wrong.
+### ARGS ###
+--shout
+### STDERR ###
+greet: no name given
+### EXIT ###
+2
+
+### TITLE ###
+unknown flag names the flag
+### ARGS ###
+--yell
+Ada
+### STDERR ###
+greet: unknown flag --yell
+### EXIT ###
+2
+
+### TITLE ###
+repeat rejects a non-number
+### ARGS ###
+--repeat
+lots
+Ada
+### STDERR ###
+greet: --repeat wants a positive number, got "lots"
+### EXIT ###
+2
+
+### TITLE ###
+repeat rejects a missing count
+### ARGS ###
+Ada
+--repeat
+### STDERR ###
+greet: --repeat needs a count
+### EXIT ###
+2
+
+### TITLE ###
+an unknown locale fails before any greeting
+### FIXTURE ###
+klingon
+### ARGS ###
+Ada
+### STDERR ###
+greet: unknown locale "tlh"
+### EXIT ###
+2

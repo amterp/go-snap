@@ -1,0 +1,78 @@
+### TITLE ###
+arrow down then enter picks the second option
+### OPTIONS ###
+Hamburger
+Pizza
+Sushi
+### KEYS ###
+down
+enter
+### CHOICE ###
+Pizza
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick a food
+> Hamburger
+  Pizza
+  Sushi
+--- frame 1 (down) ---
+Pick a food
+  Hamburger
+> Pizza
+  Sushi
+--- frame 2 (enter) ---
+Pick a food Pizza
+
+### TITLE ###
+typing filters the list before selecting
+### OPTIONS ###
+Hamburger
+Pizza
+Sushi
+### KEYS ###
+"su"
+enter
+### CHOICE ###
+Sushi
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick a food
+> Hamburger
+  Pizza
+  Sushi
+--- frame 1 (s) ---
+Pick a food
+/s
+> Sushi
+--- frame 2 (u) ---
+Pick a food
+/su
+> Sushi
+--- frame 3 (enter) ---
+Pick a food Sushi
+
+### TITLE ###
+ctrl-c cancels
+### OPTIONS ###
+Hamburger
+Pizza
+### KEYS ###
+ctrl-c
+### CHOICE ###
+(canceled)
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick a food
+> Hamburger
+  Pizza
+
+### TITLE ###
+reaching a prompt with no scripted keys fails loudly instead of hanging
+### DESCRIPTION ###
+The guard that matters most: without it this case would block on a terminal
+that is not there, and a hung suite looks like broken infrastructure rather
+than a missing KEYS section.
+### OPTIONS ###
+Hamburger
+### CHOICE ###
+error: interactive prompt reached without scripted keys: add a KEYS section to this case

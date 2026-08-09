@@ -1,0 +1,108 @@
+### TITLE ###
+single line difference
+### WANT ###
+hello world
+### GOT ###
+hello earth
+### REPORT ###
+STDOUT mismatch:
+1 │ - hello world │ 1 │ + hello earth
+
+  at snapshots/example.snap:12
+  to accept: -update=snapshots/example.snap
+
+### TITLE ###
+multi-line difference
+### WANT ###
+alpha
+beta
+gamma
+### GOT ###
+alpha
+BETA
+gamma
+### REPORT ###
+STDOUT mismatch:
+1 │   alpha │ 1 │   alpha
+2 │ - beta  │   │ ~
+  │ ~       │ 2 │ + BETA
+3 │   gamma │ 3 │   gamma
+
+  at snapshots/example.snap:12
+  to accept: -update=snapshots/example.snap
+
+### TITLE ###
+missing output
+### WANT ###
+expected some output
+### GOT ###
+### REPORT ###
+STDOUT mismatch:
+1 │ - expected some output │   │ ~
+
+  at snapshots/example.snap:12
+  to accept: -update=snapshots/example.snap
+
+### TITLE ###
+integer channel reports values plainly
+### DESCRIPTION ###
+A diff of "1" against "0" is noise, so integers are reported as want/got.
+### KIND ###
+int
+### CHANNEL ###
+EXIT
+### WANT ###
+2
+### GOT ###
+0
+### REPORT ###
+EXIT mismatch: want 2, got 0
+  at snapshots/example.snap:12
+  to accept: -update=snapshots/example.snap
+
+### TITLE ###
+raw channel makes invisible bytes visible
+### DESCRIPTION ###
+The whole point of a raw channel is bytes a verbatim file cannot show, so its
+diff quotes each line rather than printing it.
+### KIND ###
+raw
+### WANT ###
+hello
+### GOT ###
+\"hello "
+### REPORT ###
+STDOUT mismatch:
+1 │ - "hello" │ 1 │ + "hello "
+
+  at snapshots/example.snap:12
+  to accept: -update=snapshots/example.snap
+
+### TITLE ###
+stale section explains what to do
+### KIND ###
+stale
+### CHANNEL ###
+STDERR
+### REPORT ###
+STDERR is present in the file but the runner never set it for the case, so the section asserts nothing.
+Set the channel in the runner, or delete the section.
+  at snapshots/example.snap:12
+  to accept: -update=snapshots/example.snap
+
+### TITLE ###
+per-step mismatch names its step
+### CHANNEL ###
+RESULT
+### STEP ###
+HOVER
+### WANT ###
+`foo`: int
+### GOT ###
+`foo`: str
+### REPORT ###
+RESULT mismatch at step 2 (HOVER):
+1 │ - `foo`: int │ 1 │ + `foo`: str
+
+  at snapshots/example.snap:12
+  to accept: -update=snapshots/example.snap

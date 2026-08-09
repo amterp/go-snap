@@ -1,0 +1,64 @@
+### TITLE ###
+set then get
+### SET greeting hello ###
+### RESULT ###
+created
+### GET greeting ###
+### RESULT ###
+hello
+### FINAL ###
+greeting = hello
+
+### TITLE ###
+setting an existing key reports what it replaced
+### SET k first ###
+### RESULT ###
+created
+### SET k second ###
+### RESULT ###
+replaced "first"
+### GET k ###
+### RESULT ###
+second
+### FINAL ###
+k = second
+
+### TITLE ###
+deleting a missing key is not an error
+### DEL nothing ###
+### RESULT ###
+no such key
+### FINAL ###
+(empty)
+
+### TITLE ###
+a block action carries a multi-line value
+### SET_BLOCK poem ###
+roses are red
+violets are blue
+### RESULT ###
+created
+### GET poem ###
+### RESULT ###
+roses are red
+violets are blue
+### FINAL ###
+poem = roses are red
+violets are blue
+
+### TITLE ###
+a longer session
+### SET a 1 ###
+### RESULT ###
+created
+### SET b 2 ###
+### RESULT ###
+created
+### DEL a ###
+### RESULT ###
+deleted
+### GET a ###
+### RESULT ###
+<missing>
+### FINAL ###
+b = 2

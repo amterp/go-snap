@@ -1,0 +1,54 @@
+### TITLE ###
+greets a name
+### ARGS ###
+World
+### STDOUT ###
+Hello, World!
+
+### TITLE ###
+shouting uppercases the whole line
+### ARGS ###
+--shout
+World
+### STDOUT ###
+HELLO, WORLD!
+
+### TITLE ###
+repeat prints the greeting several times
+### ARGS ###
+--repeat
+3
+Ada
+### STDOUT ###
+Hello, Ada!
+Hello, Ada!
+Hello, Ada!
+
+### TITLE ###
+a dash reads names from stdin
+### ARGS ###
+-
+### STDIN ###
+Ada Grace
+### STDOUT ###
+Hello, Ada!
+Hello, Grace!
+
+### TITLE ###
+the locale fixture changes the greeting
+### FIXTURE ###
+french
+### ARGS ###
+Ada
+### STDOUT ###
+Bonjour, Ada!
+
+### TITLE ###
+an empty name argument is still a name
+### DESCRIPTION ###
+The quoted form is the only way to write an empty argument; without it a
+line-per-item list cannot tell "empty string" from "blank line".
+### ARGS ###
+""
+### STDOUT ###
+Hello, !
