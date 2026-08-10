@@ -76,6 +76,13 @@ func resolveUpdate() updateSpec {
 	if v := lookupString(flagUpdate); v != "" {
 		return updateSpec{targets: splitTargets(v), source: "-" + flagUpdate}
 	}
+	// A flag that was passed is an answer even when its value is empty. Reading
+	// the environment anyway would make `go test -update=$(TARGET)` with an
+	// unset TARGET inherit a stray SNAP_UPDATE from the caller's shell, which is
+	// the opposite of what writing an empty target means.
+	if flagWasSet(flagUpdate) || flagWasSet(flagUpdateAll) {
+		return updateSpec{}
+	}
 	if v := strings.TrimSpace(os.Getenv(envUpdate)); v != "" {
 		if v == "all" {
 			return updateSpec{all: true, source: envUpdate + "=all"}
@@ -150,6 +157,18 @@ func lookupString(name string) string {
 		return strings.TrimSpace(f.Value.String())
 	}
 	return ""
+}
+
+// flagWasSet reports whether the flag appeared on the command line at all, as
+// opposed to sitting at its zero value.
+func flagWasSet(name string) bool {
+	set := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			set = true
+		}
+	})
+	return set
 }
 
 func lookupBool(name string) bool {

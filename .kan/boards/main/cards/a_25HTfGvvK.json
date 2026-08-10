@@ -6,7 +6,7 @@
     "api",
     "runner"
   ],
-  "column": "backlog-hi",
+  "column": "done",
   "created_at_millis": 1786328729543,
   "creator": "Alexander Terp",
   "description": "Two related gaps, both in the path an agent hits most:\n\ndidYouMean only fires when the name is spelled right and used with the wrong\naccessor. A real typo - c.Text(\"ARGSS\") - gets no help at all, which is worse\nthan the parser's version of the same mistake. Schemas here are small enough that\nlisting the declared names beats guessing at one: exhaustive, unambiguous, and no\nedit-distance code to carry.\n\nA missing snapshot directory gets a bare OS error while an empty one right beside\nit in the code gets a written, actionable message. Match them.\n\nKeep the existing kind hint - naming which bucket a section was declared under is\nthe single most useful thing we say on that path.",
@@ -15,11 +15,12 @@
     "from-review",
     "ai-hi"
   ],
-  "position": "UUUUU",
+  "position": "UUUUUU",
   "title": "Sharpen the diagnostics for a name the schema does not know",
   "type": "enhancement",
-  "updated_at_millis": 1786328729543,
+  "updated_at_millis": 1786329236217,
   "history": [
-    {"field":"column","value":"backlog-hi","at":1786328729543}
+    {"field":"column","value":"backlog-hi","at":1786328729543},
+    {"field":"column","value":"done","at":1786329236217}
   ]
 }

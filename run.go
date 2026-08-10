@@ -31,6 +31,9 @@ type reporter interface {
 	Helper()
 	Errorf(format string, args ...any)
 	Skip(args ...any)
+	// Failed reports whether this case has already been failed - by the
+	// suite's own runner, since the engine reports nothing until afterwards.
+	Failed() bool
 }
 
 // fileState is one snapshot file through a run: what was on disk, what parsed
@@ -167,13 +170,19 @@ func runCase(t *testing.T, rep reporter, s *Suite, sc *schema, c *Case, rel stri
 	}
 
 	s.Run(t, c)
-	// Reached only if the runner returned normally. A runner that bailed out
-	// with t.Fatal produced nothing, and an update must not read that as
-	// "every channel is now empty" and delete the case's expectations.
-	c.ran = true
+	// An update may only bless output from a runner that both finished and is
+	// happy with what it produced. t.Fatal never reaches this line at all, but
+	// the commoner `t.Errorf(...); return` does, and blessing a partial run
+	// there deletes the very expectations the failure should have protected -
+	// while the terminal says FAIL and gives no hint the file was touched.
+	c.ran = !rep.Failed()
 
 	mismatches := eval(sc, c)
 	if updating {
+		if !c.ran {
+			rep.Errorf("not accepting output for this case: its runner reported a failure, so what it produced cannot be trusted.\n" +
+				"The file keeps its current expectations. Fix the failure, then run the update again.")
+		}
 		return
 	}
 	for _, m := range mismatches {

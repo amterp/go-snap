@@ -50,7 +50,14 @@ func needsEscape(m Markers, line string) bool {
 	if trimmed := strings.TrimRight(line, " \t"); trimmed != line {
 		return true
 	}
-	for _, r := range line {
+	return hasUnprintable(line)
+}
+
+// hasUnprintable reports bytes that cannot survive being written as one line of
+// a text file: a newline would split the line in two, and the other control
+// characters are invisible to whoever reviews the diff.
+func hasUnprintable(s string) bool {
+	for _, r := range s {
 		if r < 0x20 && r != '\t' || r == 0x7f {
 			return true
 		}
@@ -58,11 +65,17 @@ func needsEscape(m Markers, line string) bool {
 	return false
 }
 
-// quoteListItem renders a list item, quoting it when the plain form would not
-// survive the line-per-item encoding - an empty item, or one whose meaning
-// lives in its surrounding whitespace.
-func quoteListItem(item string) string {
-	if item == "" || strings.TrimSpace(item) != item || strings.HasPrefix(item, `"`) {
+// quoteListItem renders one item of a Quoted list, Go-quoting it whenever the
+// bare form would not read back as the same single item.
+//
+// Every condition here is a way the bare form lies. An empty item vanishes, one
+// with surrounding whitespace loses it, one already starting with a quote would
+// be unquoted on the way back, one holding a newline becomes two items, and one
+// shaped like a section header splices a section into the middle of the case -
+// which does not merely change the item, it makes the file unparseable.
+func quoteListItem(m Markers, item string) string {
+	if item == "" || strings.TrimSpace(item) != item ||
+		strings.HasPrefix(item, `"`) || looksLikeHeader(m, item) || hasUnprintable(item) {
 		return strconv.Quote(item)
 	}
 	return item

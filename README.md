@@ -159,6 +159,11 @@ nothing at all - which is how a suite makes an assertion conditional. The
 converse, a section in the file that the runner never sets, is an error: it is an
 expectation nothing verifies.
 
+Because absence carries that meaning on both sides, an update also removes a
+section it can reproduce: write `### EXIT ###` with a body of `0` and the next
+accepted update deletes it. The assertion is unchanged - an absent `EXIT` still
+requires zero - but the line you typed will not survive.
+
 **Bodies are stored verbatim**, which is what makes these files worth reviewing.
 Trailing newlines are not compared, because a text file cannot pin them down
 reliably. Three kinds of line cannot survive that round trip - one that would
@@ -177,15 +182,29 @@ When a section is about bytes rather than lines, declare it `Raw` or mark one
 instance `### STDOUT [raw] ###`. Its body is a single Go-quoted string, compared
 exactly, and its diffs quote each line so invisible differences are visible.
 
-A `List` input is one item per non-blank line. Add `Quoted` and an item may be
-written as a Go-quoted string, which is the only way to express an empty or
-space-padded argument.
+A `List` input is one item per non-blank line, whitespace trimmed, and carries
+no escape convention: a line means the characters in it. Add `Quoted` and an item
+may be written as a Go-quoted string, which is the only way to express an empty
+item, a space-padded one, or one holding a newline.
 
 `Markers` changes the header syntax when `###` collides with the content you
 snapshot:
 
 ```go
 Markers: snap.Markers{Prefix: "=== ", Suffix: " ==="}
+```
+
+Choose them before the suite has files. Changing them later leaves every existing
+snapshot unparseable, since its headers are written in the old syntax.
+
+Section names are strings in two places - the `Suite` and the runner - and
+nothing links them. For a suite big enough that the drift would go unnoticed,
+keep the declaration in a variable and read the name off it:
+
+```go
+var KeysSection = snap.Input{Name: "KEYS", List: true}
+
+keys := c.List(KeysSection.Name)
 ```
 
 ## Determinism

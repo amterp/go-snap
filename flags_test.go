@@ -106,3 +106,35 @@ func TestStringUpdateFlagIsAdoptedQuietly(t *testing.T) {
 		t.Errorf("a string -update is the shape go-snap needs: %v", err)
 	}
 }
+
+// An empty -update= is an answer, not a shrug. A Makefile writing
+// `go test ./... -update=$(TARGET)` with TARGET unset must mean "do not update",
+// not "inherit whatever the developer happens to export".
+func TestAnExplicitlyEmptyFlagBeatsTheEnvironment(t *testing.T) {
+	saved := flag.CommandLine
+	t.Cleanup(func() { flag.CommandLine = saved })
+	flag.CommandLine = flag.NewFlagSet("test", flag.ContinueOnError)
+	flag.String(flagUpdate, "", "")
+	flag.Bool(flagUpdateAll, false, "")
+	if err := flag.CommandLine.Parse([]string{"-" + flagUpdate + "="}); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(envUpdate, "all")
+
+	if got := resolveUpdate(); got.active() {
+		t.Errorf("a stray %s overrode an explicit empty target: %+v", envUpdate, got)
+	}
+}
+
+func TestTheEnvironmentStillAppliesWhenNoFlagIsPassed(t *testing.T) {
+	saved := flag.CommandLine
+	t.Cleanup(func() { flag.CommandLine = saved })
+	flag.CommandLine = flag.NewFlagSet("test", flag.ContinueOnError)
+	flag.String(flagUpdate, "", "")
+	flag.Bool(flagUpdateAll, false, "")
+	t.Setenv(envUpdate, "errors")
+
+	if got := resolveUpdate(); len(got.targets) != 1 || got.targets[0] != "errors" {
+		t.Errorf("resolveUpdate = %+v", got)
+	}
+}

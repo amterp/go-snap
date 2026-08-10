@@ -6,7 +6,7 @@
     "api",
     "tooling"
   ],
-  "column": "next",
+  "column": "done",
   "created_at_millis": 1786328729581,
   "creator": "Alexander Terp",
   "description": "ParseFile is documented for tooling that only reads files - editors, migration\nscripts. It calls schema(), which rejects a Suite with a nil Run, so every\nread-only caller has to stub a runner it will never invoke.\n\nFriction aimed squarely at the audience the function was written for. Split the\nRun check out of schema validation for the parse-only path.",
@@ -15,11 +15,12 @@
     "from-review",
     "ai-hi"
   ],
-  "position": "UUUUU",
+  "position": "UUUUUUU",
   "title": "ParseFile demands a Suite.Run it never calls",
   "type": "enhancement",
-  "updated_at_millis": 1786328729581,
+  "updated_at_millis": 1786329236246,
   "history": [
-    {"field":"column","value":"next","at":1786328729581}
+    {"field":"column","value":"next","at":1786328729581},
+    {"field":"column","value":"done","at":1786329236246}
   ]
 }

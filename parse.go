@@ -83,6 +83,9 @@ func assemble(sc *schema, m Markers, path string, sections []section) ([]*Case, 
 
 	for _, s := range sections {
 		if s.name == secTitle {
+			if err := checkMetaHeader(s, errf); err != nil {
+				return nil, err
+			}
 			title, err := scalar(s.body)
 			if err != nil {
 				return nil, errf(s.line, "%s: %v", secTitle, err)
@@ -113,17 +116,59 @@ func assemble(sc *schema, m Markers, path string, sections []section) ([]*Case, 
 	return cases, nil
 }
 
-func (c *Case) addSection(sc *schema, m Markers, s section, errf func(int, string, ...any) error) error {
+// checkMetaHeader rejects decoration on a library-owned section. TITLE,
+// DESCRIPTION and SKIP carry one line of prose and nothing else, so an argument
+// or a [raw] flag is a mistake - and a mistake the reader would otherwise never
+// hear about, since both would simply be dropped.
+func checkMetaHeader(s section, errf func(int, string, ...any) error) error {
+	if len(s.args) > 0 {
+		return errf(s.line, "%s takes no header arguments, got %q", s.name, strings.Join(s.args, " "))
+	}
 	if s.raw {
-		if k, ok := sc.kinds[s.name]; ok && k == kindAction && !sc.actions[s.name].HasBody {
-			return errf(s.line, "%s takes no body, so %s is meaningless", s.name, rawFlag)
+		return errf(s.line, "%s holds one line of text, so %s is meaningless", s.name, rawFlag)
+	}
+	return nil
+}
+
+// checkRawFlag rejects a [raw] flag on a section that has no bytes for it to
+// govern. Accepting it silently would let a suite believe it had asked for an
+// exact comparison it is not getting.
+func checkRawFlag(sc *schema, s section) string {
+	if !s.raw {
+		return ""
+	}
+	switch sc.kinds[s.name] {
+	case kindAction:
+		if !sc.actions[s.name].HasBody {
+			return "takes no body"
 		}
+	case kindInput:
+		if sc.inputs[s.name].List {
+			return "is a List, whose items are quoted per line"
+		}
+	case kindOutput:
+		if sc.outputs[s.name].Int {
+			return "is an Int"
+		}
+	}
+	return ""
+}
+
+func (c *Case) addSection(sc *schema, m Markers, s section, errf func(int, string, ...any) error) error {
+	if why := checkRawFlag(sc, s); why != "" {
+		return errf(s.line, "%s %s, so %s is meaningless", s.name, why, rawFlag)
 	}
 
 	switch s.name {
 	case secDescription, secSkip:
+		if err := checkMetaHeader(s, errf); err != nil {
+			return err
+		}
 		if len(c.inputs) > 0 || len(c.steps) > 0 {
 			return errf(s.line, "%s must come before the case's input and action sections", s.name)
+		}
+		if _, dup := c.lines[s.name]; dup {
+			return errf(s.line, "%s appears twice in one case", s.name)
 		}
 		body, err := blockOf(s, false)
 		if err != nil {
@@ -269,10 +314,18 @@ func scalar(body []string) (string, error) {
 	}
 }
 
+// listOf reads a list body as one item per non-blank line.
+//
+// Deliberately no unescapeLine here. A list line carries at most one convention:
+// the Go-quoted form for a Quoted list, and nothing at all otherwise. Running the
+// body-text escape as well would mean two decoders on the read side against one
+// encoder on the write side, and the pairs that only one of them handles - an
+// item that opens with the escape prefix, say - come back shorter than they went
+// in. A non-Quoted list is plain text, exactly as it looks.
 func listOf(body []string, quoted bool) []string {
 	var items []string
 	for _, line := range body {
-		line = strings.TrimSpace(unescapeLine(line))
+		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}

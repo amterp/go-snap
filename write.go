@@ -46,7 +46,7 @@ func render(sc *schema, m Markers, cases []*Case) []byte {
 			in := sc.inputs[name]
 			switch {
 			case in.List:
-				writeSection(&b, m, name, nil, false, listBody(v.items, in.Quoted))
+				writeSection(&b, m, name, nil, false, listBody(m, v.items, in.Quoted))
 			case v.raw:
 				writeSection(&b, m, name, nil, !in.Raw, strconv.Quote(v.text))
 			default:
@@ -126,14 +126,18 @@ func escapeBody(m Markers, s string) string {
 	return strings.Join(lines, "\n")
 }
 
-func listBody(items []string, quoted bool) string {
+// listBody writes one item per line. A non-Quoted item goes out verbatim,
+// which is safe because the reader can only ever have produced a plain one:
+// blank lines are skipped, surrounding whitespace is trimmed, and a line shaped
+// like a header was consumed as a section long before it reached the list.
+func listBody(m Markers, items []string, quoted bool) string {
 	if len(items) == 0 {
 		return ""
 	}
 	out := make([]string, len(items))
 	for i, item := range items {
 		if quoted {
-			out[i] = quoteListItem(item)
+			out[i] = quoteListItem(m, item)
 		} else {
 			out[i] = item
 		}

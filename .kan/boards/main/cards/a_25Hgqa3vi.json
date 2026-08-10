@@ -1,0 +1,24 @@
+{
+  "_v": 3,
+  "alias": "split-suite-go-into",
+  "alias_explicit": false,
+  "area": [
+    "api"
+  ],
+  "column": "backlog-lo",
+  "created_at_millis": 1786329236283,
+  "creator": "Alexander Terp",
+  "description": "suite.go holds the public Suite/Input/Action/Output/Markers declarations and the\nprivate schema() validation together. Every other file in the package owns one\nconcern - case.go types, eval.go pure compare, run.go orchestration, the format\nlayer split four ways.\n\nCosmetic, and worth doing only when suite.go is being touched anyway. Filed so\nthe inconsistency is recorded rather than rediscovered.",
+  "id": "a_25Hgqa3vi",
+  "labels": [
+    "from-review",
+    "ai-hi"
+  ],
+  "position": "UU",
+  "title": "Split suite.go into types and schema compilation",
+  "type": "chore",
+  "updated_at_millis": 1786329236283,
+  "history": [
+    {"field":"column","value":"backlog-lo","at":1786329236283}
+  ]
+}

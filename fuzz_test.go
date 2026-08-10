@@ -1,6 +1,7 @@
 package snap
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -22,6 +23,15 @@ func FuzzRoundTrip(f *testing.F) {
 		"### TITLE ###\nx\n### STDOUT ###\n\\\"already escaped\"\n",
 		"### TITLE ###\nx\n### BYTES ###\n\"a\\tb\\r\\n\"\n",
 		"### TITLE ###\nx\n### ARGS ###\n\"\"\n\"  \"\n--flag\n",
+		// List items are the writer's hardest case: the read side may apply a
+		// quoting convention the write side has to invert exactly, and an item
+		// that reads back as a header does not merely change value, it changes
+		// the file's structure.
+		"### TITLE ###\nx\n### ARGS ###\n\"### STDOUT ###\"\n### STDOUT ###\ny\n",
+		"### TITLE ###\nx\n### ARGS ###\n\"a\\nb\"\n",
+		"### TITLE ###\nx\n### ARGS ###\n\"\\\\\\\"esc\\\"\"\n",
+		"### TITLE ###\nx\n### KEYS ###\n\\\"### TITLE ###\"\nenter\n",
+		"### TITLE ###\nx\n### KEYS ###\n\"quoted\"\nenter\n",
 		"### TITLE ###\nx\n### INPUT ###\n\n\nblank lines\n\n### STDOUT ###\ny\n",
 		"### TITLE ###\nx\n### HOVER 1:2 ###\n### RESULT ###\nr\n### CHANGE ###\nbody\n",
 		"### TITLE ###\na\n### STDOUT ###\n1\n\n### TITLE ###\nb\n### EXIT ###\n2\n",
@@ -93,20 +103,27 @@ func assertSameCase(t *testing.T, a, b *Case) {
 		if strings.Join(a.steps[i].Args, " ") != strings.Join(b.steps[i].Args, " ") {
 			t.Fatalf("%s: step %d args changed: %q -> %q", a.title, i, a.steps[i].Args, b.steps[i].Args)
 		}
+		assertSameOutputs(t, a.title+" step "+strconv.Itoa(i), a.steps[i].expected, b.steps[i].expected)
 	}
-	for name, av := range a.expected {
-		bv, ok := b.expected[name]
+	assertSameOutputs(t, a.title, a.expected, b.expected)
+}
+
+func assertSameOutputs(t *testing.T, where string, a, b map[string]*outVal) {
+	t.Helper()
+	for name, av := range a {
+		bv, ok := b[name]
 		if !ok {
 			// The writer drops a default-valued channel on purpose; an absent
-			// section and a zero value mean the same thing.
-			if av.text == "" && av.num == 0 {
+			// section and a zero value mean the same thing. A raw marker is
+			// never dropped, so its absence here is a real loss.
+			if av.text == "" && av.num == 0 && !av.raw {
 				continue
 			}
-			t.Fatalf("%s: output %s disappeared with value %q", a.title, name, av.text)
+			t.Fatalf("%s: output %s disappeared with value %q", where, name, av.text)
 		}
-		if av.text != bv.text || av.num != bv.num {
-			t.Fatalf("%s: output %s changed: %q/%d -> %q/%d",
-				a.title, name, av.text, av.num, bv.text, bv.num)
+		if av.text != bv.text || av.num != bv.num || av.raw != bv.raw {
+			t.Fatalf("%s: output %s changed: %q/%d/raw=%v -> %q/%d/raw=%v",
+				where, name, av.text, av.num, av.raw, bv.text, bv.num, bv.raw)
 		}
 	}
 }

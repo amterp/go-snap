@@ -13,9 +13,13 @@ type fakeReporter struct {
 	errors  []string
 	skipped string
 	didSkip bool
+	// failed stands in for a suite runner that called t.Errorf and returned,
+	// which the harness cannot do for real without failing its own test.
+	failed bool
 }
 
-func (f *fakeReporter) Helper() {}
+func (f *fakeReporter) Helper()      {}
+func (f *fakeReporter) Failed() bool { return f.failed }
 func (f *fakeReporter) Errorf(format string, args ...any) {
 	f.errors = append(f.errors, sprintf(format, args...))
 }
@@ -354,4 +358,30 @@ func TestUndeclaredSectionListsWhatIsDeclared(t *testing.T) {
 		}
 	}()
 	cases[0].Text("ARGSS")
+}
+
+// A runner that reports a failure and returns has told us its output cannot be
+// trusted. Accepting it would delete the very expectations the failure should
+// have protected, while the terminal says FAIL and never mentions the file.
+func TestUpdateRefusesOutputFromAFailedRunner(t *testing.T) {
+	s := cliSuite(func(t *testing.T, c *Case) {
+		// The real runner would call t.Errorf here and return without
+		// reaching its Out calls; rep.failed below is that, simulated.
+	})
+	sc, _ := s.schema()
+	src := "### TITLE ###\nx\n### STDOUT ###\nhard-won expectation\n### EXIT ###\n3\n"
+	cases, err := parse(sc, s.Markers, "x.snap", []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep := &fakeReporter{failed: true}
+	runCase(t, rep, s, sc, cases[0], "x.snap", true)
+	apply(sc, cases[0])
+
+	if got := string(render(sc, s.Markers, cases)); got != src {
+		t.Errorf("a failed runner's empty output was blessed, destroying the file:\n%s", got)
+	}
+	if len(rep.errors) != 1 || !strings.Contains(rep.errors[0], "cannot be trusted") {
+		t.Errorf("the run should say why nothing was accepted, got %q", rep.errors)
+	}
 }

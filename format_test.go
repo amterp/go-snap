@@ -257,6 +257,31 @@ func TestParseErrors(t *testing.T) {
 			`test.snap:3: unknown section "STDOUR"`,
 		},
 		{
+			"header arguments on a meta section",
+			"### TITLE oops ###\nx\n### STDOUT ###\ny\n",
+			`test.snap:1: TITLE takes no header arguments, got "oops"`,
+		},
+		{
+			"raw flag on a meta section",
+			"### TITLE [raw] ###\n\"x\"\n### STDOUT ###\ny\n",
+			"test.snap:1: TITLE holds one line of text, so [raw] is meaningless",
+		},
+		{
+			"duplicate description",
+			"### TITLE ###\nx\n### DESCRIPTION ###\nfirst\n### DESCRIPTION ###\nsecond\n",
+			"test.snap:5: DESCRIPTION appears twice in one case",
+		},
+		{
+			"raw flag on a list input",
+			"### TITLE ###\nx\n### ARGS [raw] ###\na\n",
+			"test.snap:3: ARGS is a List, whose items are quoted per line, so [raw] is meaningless",
+		},
+		{
+			"raw flag on an int output",
+			"### TITLE ###\nx\n### EXIT [raw] ###\n1\n",
+			"test.snap:3: EXIT is an Int, so [raw] is meaningless",
+		},
+		{
 			"content before first title",
 			"stray\n### TITLE ###\nx\n",
 			"test.snap:1: content before the first TITLE",
@@ -469,5 +494,88 @@ func TestDiscoverIgnoresPendingFiles(t *testing.T) {
 	}
 	if len(paths) != 1 || filepath.Base(paths[0]) != "a.snap" {
 		t.Errorf("discover = %v, want only a.snap", paths)
+	}
+}
+
+// A list item is hand-authored content that a rewrite must return unchanged.
+// Every case here was a way the writer used to lose or duplicate one, and the
+// last two do worse than lose it: they splice a section into the case and leave
+// a file that no longer parses.
+func TestListItemsSurviveARewrite(t *testing.T) {
+	s := testSuite()
+	sc, err := s.schema()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name string
+		body string
+		want []string
+	}{
+		{"embedded newline", `"a` + "\\n" + `b"`, []string{"a\nb"}},
+		{"escape prefix", `"\\\"foo\""`, []string{`\"foo"`}},
+		{"looks like a header", `"### STDOUT ###"`, []string{"### STDOUT ###"}},
+		{"looks like a title", `"### TITLE ###"`, []string{"### TITLE ###"}},
+		{"padded and empty", "\"  x  \"\n\"\"", []string{"  x  ", ""}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			src := "### TITLE ###\nx\n### ARGS ###\n" + tt.body + "\n### STDOUT ###\ny\n"
+			cases, err := parse(sc, s.Markers, "test.snap", []byte(src))
+			if err != nil {
+				t.Fatalf("parse: %v", err)
+			}
+			assertItems(t, "on read", cases[0].List("ARGS"), tt.want)
+
+			out := render(sc, s.Markers, cases)
+			round, err := parse(sc, s.Markers, "test.snap", out)
+			if err != nil {
+				t.Fatalf("the rewritten file no longer parses: %v\n%s", err, out)
+			}
+			if len(round) != 1 {
+				t.Fatalf("the rewrite produced %d cases from one:\n%s", len(round), out)
+			}
+			assertItems(t, "after a rewrite", round[0].List("ARGS"), tt.want)
+			if got := round[0].expected["STDOUT"].text; got != "y" {
+				t.Errorf("STDOUT became %q; the list spilled into the sections after it:\n%s", got, out)
+			}
+		})
+	}
+}
+
+// A non-Quoted list carries no escape convention, so a line that looks escaped
+// is just those characters. The writer emits it back verbatim rather than
+// decoding it into something it then cannot represent.
+func TestNonQuotedListIsPlainText(t *testing.T) {
+	s := testSuite()
+	sc, _ := s.schema()
+	src := "### TITLE ###\nx\n### KEYS ###\n" + `\"### TITLE ###"` + "\nenter\n### STDOUT ###\ny\n"
+	cases, err := parse(sc, s.Markers, "test.snap", []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertItems(t, "on read", cases[0].List("KEYS"), []string{`\"### TITLE ###"`, "enter"})
+
+	out := render(sc, s.Markers, cases)
+	round, err := parse(sc, s.Markers, "test.snap", out)
+	if err != nil {
+		t.Fatalf("the rewritten file no longer parses: %v\n%s", err, out)
+	}
+	if len(round) != 1 {
+		t.Fatalf("the rewrite invented %d cases:\n%s", len(round), out)
+	}
+	assertItems(t, "after a rewrite", round[0].List("KEYS"), []string{`\"### TITLE ###"`, "enter"})
+}
+
+func assertItems(t *testing.T, when string, got, want []string) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Fatalf("%s: got %d items %q, want %d %q", when, len(got), got, len(want), want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("%s: item %d = %q, want %q", when, i, got[i], want[i])
+		}
 	}
 }

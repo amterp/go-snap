@@ -67,7 +67,9 @@ type Action struct {
 
 	// Args is the exact number of header argument tokens, or -1 for variadic.
 	Args int
-	// HasBody allows (and requires) a body under the header.
+	// HasBody allows a body under the header. An action without it rejects
+	// one; an action with it may still be written empty, since "no content"
+	// is usually a case worth testing rather than a mistake.
 	HasBody bool
 }
 
@@ -242,6 +244,14 @@ func (s *Suite) schemaFor(needsRun bool) (*schema, error) {
 	}
 	if len(sc.outputs) == 0 {
 		problems = append(problems, "suite declares no Outputs, so no case can assert anything")
+	}
+	if len(sc.actions) == 0 {
+		for _, o := range s.Outputs {
+			if o.PerStep {
+				problems = append(problems, fmt.Sprintf(
+					"output %q is PerStep but the suite declares no Actions, so nothing could ever set it", o.Name))
+			}
+		}
 	}
 	if p, sfx := s.Markers.prefix(), s.Markers.suffix(); p == "" {
 		problems = append(problems, "Markers.Prefix is empty, which would make every line a section header")

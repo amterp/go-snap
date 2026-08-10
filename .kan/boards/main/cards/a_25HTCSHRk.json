@@ -5,7 +5,7 @@
   "area": [
     "runner"
   ],
-  "column": "next",
+  "column": "done",
   "created_at_millis": 1786328711681,
   "creator": "Alexander Terp",
   "description": "Run's discovery loop calls t.Fatal on the first file that fails to parse, so\nfiles sorted after it are never read. Two broken files means fix one, rerun,\ndiscover the second - a round trip that is pure cost to a human and worse to an\nagent, which pays a whole turn for it.\n\nSuite.schema() already batches every schema problem into one message for exactly\nthis reason. The parse loop should match it: collect, then report all of them\nwith a count.\n\nRead failures belong in the same batch - an unreadable file is the same class of\nproblem to whoever is fixing it.",
@@ -14,11 +14,12 @@
     "from-review",
     "ai-hi"
   ],
-  "position": "UUU",
+  "position": "UUUU",
   "title": "One unparseable file hides every other parse error in the run",
   "type": "enhancement",
-  "updated_at_millis": 1786328711681,
+  "updated_at_millis": 1786329236160,
   "history": [
-    {"field":"column","value":"next","at":1786328711681}
+    {"field":"column","value":"next","at":1786328711681},
+    {"field":"column","value":"done","at":1786329236160}
   ]
 }
