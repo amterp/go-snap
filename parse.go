@@ -32,6 +32,15 @@ func parse(sc *schema, m Markers, path string, data []byte) ([]*Case, error) {
 	text := strings.TrimPrefix(string(data), "\ufeff")
 	lines := strings.Split(text, "\n")
 
+	// A file's own final newline terminates the last line rather than starting a
+	// blank one. Dropping it makes the last section in a file read exactly like
+	// one followed by a header, and makes "does this file end with a newline"
+	// stop mattering - which is the part of trailing whitespace a text file
+	// genuinely cannot pin down.
+	if n := len(lines); n > 0 && lines[n-1] == "" {
+		lines = lines[:n-1]
+	}
+
 	var sections []section
 	cur := -1
 	for i, line := range lines {
@@ -51,6 +60,20 @@ func parse(sc *schema, m Markers, path string, data []byte) ([]*Case, error) {
 		h.line = lineNo
 		if err := checkKnown(sc, m, path, h); err != nil {
 			return nil, err
+		}
+		// The writer separates cases with a blank line, so one blank line
+		// immediately before a TITLE is structure rather than content. Consuming
+		// it here is what keeps a read-write round trip stable: without this the
+		// separator would be absorbed into the previous case's last section and
+		// re-emitted alongside a fresh one, growing the file on every update.
+		//
+		// A body that really does end in a blank line writes two, on the same
+		// "one blank line is one trailing newline" rule that applies everywhere
+		// else.
+		if h.name == secTitle && cur >= 0 {
+			if n := len(sections[cur].body); n > 0 && sections[cur].body[n-1] == "" {
+				sections[cur].body = sections[cur].body[:n-1]
+			}
 		}
 		sections = append(sections, section{header: h})
 		cur = len(sections) - 1
@@ -276,7 +299,15 @@ func blockOf(s section, raw bool) (string, error) {
 	for i, line := range s.body {
 		out[i] = unescapeLine(line)
 	}
-	return strings.TrimRight(strings.Join(out, "\n"), "\n"), nil
+	// Each body line is terminated by a newline, and the last of those newlines
+	// is the separator before the next header rather than content - which is
+	// exactly what Join reproduces. So a body of "foo" is one line, and each
+	// blank line before the next header is one more trailing newline.
+	//
+	// This has to be lossless because an input is data the runner feeds to the
+	// system under test, not an assertion about it: a section that quietly drops
+	// bytes hands the runner something the file does not say.
+	return strings.Join(out, "\n"), nil
 }
 
 func rawBody(body []string) (string, error) {

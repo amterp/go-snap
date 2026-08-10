@@ -105,13 +105,20 @@ func isDefault(o Output, v *outVal) bool {
 	return v.text == ""
 }
 
+// writeSection renders one section verbatim, followed by the newline that
+// separates it from the next header. It is the exact inverse of blockOf, so a
+// body's trailing newlines survive a read-write round trip as blank lines.
+//
+// Nothing is trimmed here. Output channels are already canonicalized when an
+// update is accepted; trimming again would also reach hand-authored input
+// sections, which the writer's job is to reproduce rather than to edit.
 func writeSection(b *strings.Builder, m Markers, name string, args []string, raw bool, body string) {
 	b.WriteString(renderHeader(m, name, args, raw))
 	b.WriteString("\n")
 	if body == "" {
 		return
 	}
-	b.WriteString(strings.TrimRight(body, "\n"))
+	b.WriteString(body)
 	b.WriteString("\n")
 }
 

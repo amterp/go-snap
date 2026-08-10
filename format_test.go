@@ -118,6 +118,84 @@ x
 	}
 }
 
+// TestTrailingNewlinesAreCounted pins the rule that makes an input faithful: a
+// body line is terminated by its newline, and the last of those is the
+// separator before the next header. So each blank line before that header is
+// one more trailing newline in the value.
+//
+// An input is data the runner feeds to the system under test, not a claim about
+// it. A section that silently dropped trailing bytes would hand the runner
+// something the file does not say - and the difference is invisible in review,
+// because what is missing is whitespace.
+func TestTrailingNewlinesAreCounted(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		blank string
+		want  string
+	}{
+		{"none", "", "foo"},
+		{"one", "\n", "foo\n"},
+		{"two", "\n\n", "foo\n\n"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			text := "### TITLE ###\nt\n### INPUT ###\nfoo\n" + tc.blank + "### STDOUT ###\nx\n"
+			if got := parseString(t, testSuite(), text)[0].Text("INPUT"); got != tc.want {
+				t.Errorf("INPUT = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// TestTrailingNewlinesSurviveARewrite is the other half: accepting an update
+// anywhere in a file rewrites the whole file, so a hand-authored trailing
+// newline has to round trip. Losing it here would corrupt an input that had
+// nothing to do with the change being accepted.
+func TestTrailingNewlinesSurviveARewrite(t *testing.T) {
+	const text = "### TITLE ###\nt\n### INPUT ###\nfoo\n\n### STDOUT ###\nx\n"
+	s := testSuite()
+	cases := parseString(t, s, text)
+
+	path := filepath.Join(t.TempDir(), "out.snap")
+	if err := WriteFile(s, path, cases); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read: %v", err)
+	}
+	if string(got) != text {
+		t.Errorf("round trip changed the file:\n got %q\nwant %q", got, text)
+	}
+}
+
+// TestCaseSeparatorIsNotContent covers the one place the rule above needs an
+// exception: the writer puts a blank line between cases, so a single blank line
+// before a TITLE is structure. A body that really ends in a blank line writes
+// two, and the count still works.
+func TestCaseSeparatorIsNotContent(t *testing.T) {
+	cases := parseString(t, testSuite(), `### TITLE ###
+separator only
+### INPUT ###
+foo
+
+### TITLE ###
+separator plus a real trailing newline
+### INPUT ###
+bar
+
+
+### TITLE ###
+last in file
+### INPUT ###
+baz
+`)
+	for i, want := range []string{"foo", "bar\n", "baz"} {
+		if got := cases[i].Text("INPUT"); got != want {
+			t.Errorf("case %d INPUT = %q, want %q", i, got, want)
+		}
+	}
+}
+
 func TestParseQuotedListPreservesEdgeItems(t *testing.T) {
 	c := parseString(t, testSuite(), `### TITLE ###
 args

@@ -165,8 +165,29 @@ accepted update deletes it. The assertion is unchanged - an absent `EXIT` still
 requires zero - but the line you typed will not survive.
 
 **Bodies are stored verbatim**, which is what makes these files worth reviewing.
-Trailing newlines are not compared, because a text file cannot pin them down
-reliably. Three kinds of line cannot survive that round trip - one that would
+A body line is terminated by its newline, and the last of those newlines is the
+separator before the next header - so each blank line before that header is one
+more trailing newline in the value, and every value is expressible:
+
+```
+### INPUT ###
+foo
+                  # -> "foo\n"
+### STDOUT ###
+```
+
+Inputs are faithful because an input is data the runner feeds to the system under
+test, not a claim about it; a section that dropped trailing bytes would hand the
+runner something the file does not say. **Text outputs still forgive trailing
+newlines when compared**, because whether a stream ends in one is usually
+incidental, and pinning it in every case would be noise rather than assurance.
+Declare a channel `Raw` when it is not incidental.
+
+The writer separates cases with a blank line, so one blank line before a `TITLE`
+is structure rather than content. A body that really ends in a blank line before
+the next case writes two.
+
+Three kinds of line cannot survive a verbatim round trip - one that would
 re-read as a header, one an editor would strip trailing whitespace from, one
 carrying a carriage return - and the writer escapes exactly those as a backslash
 followed by a Go-quoted string:
