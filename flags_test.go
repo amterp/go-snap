@@ -82,6 +82,7 @@ func TestBoolUpdateFlagFromAnotherPackageIsRefused(t *testing.T) {
 	// Several Go snapshot libraries spell -update as a bool. Adopting one would
 	// read its value as the path substring "true", which matches almost nothing
 	// and occasionally the wrong thing - silently, either way.
+	t.Setenv(envCI, "")
 	saved := flag.CommandLine
 	t.Cleanup(func() { flag.CommandLine = saved })
 	flag.CommandLine = flag.NewFlagSet("test", flag.ContinueOnError)
@@ -97,6 +98,8 @@ func TestBoolUpdateFlagFromAnotherPackageIsRefused(t *testing.T) {
 }
 
 func TestStringUpdateFlagIsAdoptedQuietly(t *testing.T) {
+	// check() enforces the CI guard too, and this suite's own CI sets CI=1.
+	t.Setenv(envCI, "")
 	saved := flag.CommandLine
 	t.Cleanup(func() { flag.CommandLine = saved })
 	flag.CommandLine = flag.NewFlagSet("test", flag.ContinueOnError)
