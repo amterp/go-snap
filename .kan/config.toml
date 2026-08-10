@@ -1,0 +1,9 @@
+kan_schema = "project/2"
+id = "p_25HGU8lJn"
+name = "go-snap"
+
+[favicon]
+  background = "#06b6d4"
+  icon_type = "letter"
+  letter = "G"
+  emoji = ""

@@ -1,0 +1,144 @@
+kan_schema = "board/12"
+id = "b_25HGU8cpv"
+name = "main"
+default_column = "backlog-lo"
+
+[[columns]]
+  name = "backlog-lo"
+  color = "#6b7280"
+  description = "Worth doing eventually. Nice-to-haves, speculative ideas, and anything that can wait for a real user to ask for it."
+
+[[columns]]
+  name = "backlog-hi"
+  color = "#3b82f6"
+  description = "Committed work that should land before v1.0. Not scheduled yet, but not optional either."
+
+[[columns]]
+  name = "next"
+  color = "#f59e0b"
+  description = "Ready to pick up now: scoped, unblocked, and understood well enough to start without further design."
+  limit = 5
+
+[[columns]]
+  name = "in-progress"
+  color = "#10b981"
+  description = "Actively being worked on. Keep this short - a long in-progress column means work is stalling, not flowing."
+  limit = 3
+
+[[columns]]
+  name = "done"
+  color = "#9333ea"
+  description = "Finished and verified: code merged, tests green, docs updated where the change needed them."
+
+[custom_fields]
+  [custom_fields.type]
+    type = "enum"
+    wanted = true
+    description = "The kind of work this card represents"
+
+    [[custom_fields.type.options]]
+      value = "bug"
+      color = "#dc2626"
+      description = "A defect: wrong behavior, a crash, or snapshot corruption"
+
+    [[custom_fields.type.options]]
+      value = "feature"
+      color = "#16a34a"
+      description = "New capability the library does not have yet"
+
+    [[custom_fields.type.options]]
+      value = "enhancement"
+      color = "#2563eb"
+      description = "An improvement to something that already works"
+
+    [[custom_fields.type.options]]
+      value = "docs"
+      color = "#0891b2"
+      description = "README, godoc, examples, or the format specification"
+
+    [[custom_fields.type.options]]
+      value = "chore"
+      color = "#4b5563"
+      description = "Maintenance, refactoring, CI, release plumbing"
+
+  [custom_fields.area]
+    type = "enum-set"
+    description = "Which part of the library the card touches"
+
+    [[custom_fields.area.options]]
+      value = "api"
+      color = "#8b5cf6"
+      description = "The exported surface: Suite, Case, Step, Run and friends"
+
+    [[custom_fields.area.options]]
+      value = "format"
+      color = "#d97706"
+      description = "The .snap file format: parse, write, escape, headers"
+
+    [[custom_fields.area.options]]
+      value = "eval"
+      color = "#0ea5e9"
+      description = "The pure comparison core and its empty/absent/stale rules"
+
+    [[custom_fields.area.options]]
+      value = "runner"
+      color = "#14b8a6"
+      description = "Discovery, the subtest tree, flags, update machinery, guards"
+
+    [[custom_fields.area.options]]
+      value = "diff"
+      color = "#ec4899"
+      description = "Mismatch rendering, go-delta wiring, accept hints"
+
+    [[custom_fields.area.options]]
+      value = "adapters"
+      color = "#84cc16"
+      description = "radishsnap and any future domain adapter package"
+
+    [[custom_fields.area.options]]
+      value = "tooling"
+      color = "#a855f7"
+      description = "CI, release, and anything built on ParseFile/WriteFile"
+
+  [custom_fields.labels]
+    type = "enum-set"
+    description = "Workflow flags that cut across areas"
+
+    [[custom_fields.labels.options]]
+      value = "breaking"
+      color = "#dc2626"
+      description = "Changes the public API or the file format. Free until v1.0, costly after."
+
+    [[custom_fields.labels.options]]
+      value = "from-review"
+      color = "#f97316"
+      description = "Raised by a code review rather than by planned work"
+
+    [[custom_fields.labels.options]]
+      value = "corruption-risk"
+      color = "#b91c1c"
+      description = "Touches the path that rewrites a user's hand-authored snapshot file"
+
+    [[custom_fields.labels.options]]
+      value = "blocked"
+      color = "#71717a"
+      description = "Waiting on a decision or on another card"
+
+    [[custom_fields.labels.options]]
+      value = "ai-hi"
+      color = "#22c55e"
+      description = "Well-suited to autonomous AI work: scoped, mechanical, little judgment needed"
+
+    [[custom_fields.labels.options]]
+      value = "ai-lo"
+      color = "#eab308"
+      description = "Probably suitable for AI, but needs review of the judgment calls"
+
+[card_display]
+  type_indicator = "type"
+  badges = ["labels", "area"]
+
+[[pattern_hooks]]
+  name = "type-shortcut"
+  pattern_title = "![a-zA-Z]+"
+  command = ".kan/hooks/type-shortcut.rad"

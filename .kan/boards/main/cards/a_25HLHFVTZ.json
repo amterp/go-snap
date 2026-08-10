@@ -1,0 +1,23 @@
+{
+  "_v": 3,
+  "alias": "port-rad-s-remaining",
+  "alias_explicit": false,
+  "area": [
+    "tooling"
+  ],
+  "column": "backlog-hi",
+  "created_at_millis": 1786328407139,
+  "creator": "Alexander Terp",
+  "description": "rad still carries its own runner loop in `core/testing`, plus three suites that\nreuse it by smuggling their domains through mismatched fields (AST in Stderr,\nchecker dumps in Stdout). That duplication is the whole reason go-snap exists.\n\nThe LSP suite is already ported and green (105 cases, zero snapshot churn) on\nbranch `try/go-snap` in the rad-gosnap worktree. These four are the bigger job:\neach needs its output channels renamed to what they actually are, which means\ntouching every .snap file in the suite, not just the harness.\n\nDone when rad's `core/testing` package is deleted and all suites run on go-snap\nwith no snapshot content changes beyond the channel renames.",
+  "id": "a_25HLHFVTZ",
+  "labels": [
+    "ai-lo"
+  ],
+  "position": "U",
+  "title": "Port rad's remaining snapshot suites onto go-snap",
+  "type": "chore",
+  "updated_at_millis": 1786328407139,
+  "history": [
+    {"field":"column","value":"backlog-hi","at":1786328407139}
+  ]
+}
