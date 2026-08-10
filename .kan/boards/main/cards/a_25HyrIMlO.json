@@ -1,0 +1,24 @@
+{
+  "_v": 3,
+  "alias": "update-blessed",
+  "alias_explicit": false,
+  "area": [
+    "runner"
+  ],
+  "column": "done",
+  "created_at_millis": 1786329928649,
+  "creator": "Alexander Terp",
+  "description": "Only t.Fatal was guarded. The commoner 'report and return' idiom returns\nnormally, so a partial run had its untouched channels deleted from the file\nwhile the terminal said FAIL and never mentioned the write.",
+  "id": "a_25HyrIMlO",
+  "labels": [
+    "corruption-risk",
+    "from-review"
+  ],
+  "position": "UUUUUUUUUUU",
+  "title": "Update blessed output from a runner that called t.Errorf",
+  "type": "bug",
+  "updated_at_millis": 1786329928649,
+  "history": [
+    {"field":"column","value":"done","at":1786329928649}
+  ]
+}

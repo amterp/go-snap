@@ -1,0 +1,23 @@
+{
+  "_v": 3,
+  "alias": "parser-accepted",
+  "alias_explicit": false,
+  "area": [
+    "format"
+  ],
+  "column": "done",
+  "created_at_millis": 1786329918985,
+  "creator": "Alexander Terp",
+  "description": "Header arguments on TITLE, a second DESCRIPTION silently replacing the first,\nand [raw] on sections with no bytes for it to govern. Also fixed HasBody's doc,\nwhich claimed to require a body it never required.",
+  "id": "a_25Hybihpo",
+  "labels": [
+    "from-review"
+  ],
+  "position": "UUUUUUUUUU",
+  "title": "Parser accepted decoration it then ignored",
+  "type": "bug",
+  "updated_at_millis": 1786329918985,
+  "history": [
+    {"field":"column","value":"done","at":1786329918985}
+  ]
+}

@@ -2,7 +2,7 @@
   "_v": 3,
   "alias": "readme-three-gaps-a",
   "alias_explicit": false,
-  "column": "backlog-hi",
+  "column": "done",
   "created_at_millis": 1786328729619,
   "creator": "Alexander Terp",
   "description": "1. -update deletes an explicitly written zero value. A case carrying\n   '### EXIT ###\\n0' loses that section on acceptance, because absent-equals-zero\n   is symmetric on write as well as read. Correct, consistent, and surprising the\n   first time. The 'Absent and empty differ' section only covers the read side.\n\n2. Section names are string literals in two places with nothing linking them -\n   the Suite declaration and the runner body. radishsnap already shows the fix\n   (a package-level var, then c.List(KeysSection.Name)) but that pattern lives\n   only there, so nobody writing a large suite will find it. One aside, not a\n   change to the minimal example - raw strings are right for a handful of\n   sections.\n\n3. Nothing states that Markers must be chosen before a suite has snapshot files.\n   Changing them later invalidates every existing file, since the old headers\n   stop parsing.\n\nKeep the minimal example minimal. These are notes for the reader who has already\ngot one working.",
@@ -11,11 +11,12 @@
     "from-review",
     "ai-lo"
   ],
-  "position": "UUUUUU",
+  "position": "UUUUUUUU",
   "title": "README: three gaps a first-time suite author walks into",
   "type": "docs",
-  "updated_at_millis": 1786328729619,
+  "updated_at_millis": 1786329918904,
   "history": [
-    {"field":"column","value":"backlog-hi","at":1786328729619}
+    {"field":"column","value":"backlog-hi","at":1786328729619},
+    {"field":"column","value":"done","at":1786329918904}
   ]
 }

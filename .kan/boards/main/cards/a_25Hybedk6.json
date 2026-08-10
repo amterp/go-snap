@@ -1,0 +1,24 @@
+{
+  "_v": 3,
+  "alias": "corrupting-list",
+  "alias_explicit": false,
+  "area": [
+    "format"
+  ],
+  "column": "done",
+  "created_at_millis": 1786329918942,
+  "creator": "Alexander Terp",
+  "description": "A list item was written back without the quoting needed to recover it. Items\nholding a newline came back as two. Items opening with the body-escape prefix\ncame back shorter. Items shaped like a section header spliced a section into the\ncase and left a file that no longer parsed.\n\nRoot cause was two decoders against one encoder: listOf ran both unescapeLine\nand unquoteListItem, while quoteListItem only guarded the second. A list now\ncarries exactly one convention.",
+  "id": "a_25Hybedk6",
+  "labels": [
+    "corruption-risk",
+    "from-review"
+  ],
+  "position": "UUUUUUUUU",
+  "title": "Corrupting list writes: quote what the reader will decode",
+  "type": "bug",
+  "updated_at_millis": 1786329918942,
+  "history": [
+    {"field":"column","value":"done","at":1786329918942}
+  ]
+}

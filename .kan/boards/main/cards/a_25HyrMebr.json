@@ -1,0 +1,23 @@
+{
+  "_v": 3,
+  "alias": "fuzzer-missed-the",
+  "alias_explicit": false,
+  "area": [
+    "format"
+  ],
+  "column": "done",
+  "created_at_millis": 1786329928687,
+  "creator": "Alexander Terp",
+  "description": "Its seeds had no list items needing quotes, and assertSameCase ignored per-step\noutputs and raw markers. Both fixed; 40M executions clean.",
+  "id": "a_25HyrMebr",
+  "labels": [
+    "from-review"
+  ],
+  "position": "UUUUUUUUUUUU",
+  "title": "Fuzzer missed the list corruption entirely",
+  "type": "chore",
+  "updated_at_millis": 1786329928687,
+  "history": [
+    {"field":"column","value":"done","at":1786329928687}
+  ]
+}
