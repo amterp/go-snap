@@ -228,9 +228,8 @@ section, and a `map[string]func()` in the runner is the entire feature.
 
 ## Interactive prompts
 
-`radishsnap` snapshots terminal prompts built with
-[radish](https://github.com/amterp/radish). Scripted keystrokes go in, rendered
-frames come out:
+The `prompt` package snapshots terminal prompts. Scripted keystrokes go in,
+rendered frames come out:
 
 ```
 ### KEYS ###
@@ -254,11 +253,13 @@ Pick a food
 channel. Each frame is labeled with the keystroke that produced it, which is what
 lets a reviewer tell a rendering bug from an input-handling bug.
 
-Install `radishsnap.NoKeys{}` as the driver for cases that script nothing. It
+Install `prompt.NoKeys{}` as the driver for cases that script nothing. It
 fails immediately instead of falling through to a terminal that is not there,
 where the suite would hang and look like broken infrastructure.
 
-The core package does not import radish.
+Prompts are driven by [radish](https://github.com/amterp/radish), which the
+package's types name directly rather than wrapping. The core package does not
+import it.
 
 ## Parallelism
 
@@ -290,9 +291,13 @@ leave it off.
 | `Parallel` | run cases with `t.Parallel()` |
 | `Diff` | `{Width, Color, Func}`; honors `NO_COLOR` and `SNAP_NO_COLOR` |
 
-`Case`: `Title`, `Description`, `Has`, `Text`, `List`, `Steps`, `Out`, `OutInt`.
-`Step`: `Name`, `Args`, `Body`, `Out`, `OutInt`.
+`Case`: `Title`, `Description`, `Has`, `Text`, `List`, `Steps`, `Out`, `OutInt`,
+`Expected`, `ExpectedInt`.
+`Step`: `Name`, `Args`, `Body`, `Out`, `OutInt`, `Expected`, `ExpectedInt`.
 
-`ParseFile` and `WriteFile` expose the format layer for tooling.
+`ParseFile` and `WriteFile` expose the format layer for tooling, and `Expected`
+reads what a file records for a channel. A suite needs none of these - a runner
+reports what happened and lets the engine compare - but a formatter, a linter, or
+a review tool reading a pending file does.
 
 `example/` is a working suite of each shape, and is run by CI.

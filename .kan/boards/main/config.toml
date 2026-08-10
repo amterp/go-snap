@@ -93,7 +93,7 @@ default_column = "backlog-lo"
     [[custom_fields.area.options]]
       value = "adapters"
       color = "#84cc16"
-      description = "radishsnap and any future domain adapter package"
+      description = "the prompt package and any future domain adapter"
 
     [[custom_fields.area.options]]
       value = "tooling"

@@ -385,3 +385,50 @@ func TestUpdateRefusesOutputFromAFailedRunner(t *testing.T) {
 		t.Errorf("the run should say why nothing was accepted, got %q", rep.errors)
 	}
 }
+
+// Expected is the read side of the tooling surface: ParseFile could carry a
+// file's output values through a rewrite but never show them to the caller,
+// which is enough for a formatter and not enough for a review tool.
+func TestExpectedReadsWhatTheFileRecords(t *testing.T) {
+	s := &Suite{
+		Run:     func(t *testing.T, c *Case) {},
+		Actions: []Action{{Name: "TICK"}},
+		Outputs: []Output{{Name: "STDOUT"}, {Name: "EXIT", Int: true}, {Name: "RESULT", PerStep: true}},
+	}
+	sc, err := s.schema()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases, err := parse(sc, s.Markers, "x.snap", []byte(
+		"### TITLE ###\nx\n### TICK ###\n### RESULT ###\nstep out\n### STDOUT ###\nhello\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := cases[0]
+
+	if got, ok := c.Expected("STDOUT"); !ok || got != "hello" {
+		t.Errorf("STDOUT = %q, present %v", got, ok)
+	}
+	// An absent section is not an absent assertion - it asserts zero - so the
+	// flag has to distinguish it from a section holding the zero value.
+	if got, ok := c.ExpectedInt("EXIT"); ok || got != 0 {
+		t.Errorf("absent EXIT = %d, present %v; want 0 and absent", got, ok)
+	}
+	if got, ok := c.Steps()[0].Expected("RESULT"); !ok || got != "step out" {
+		t.Errorf("step RESULT = %q, present %v", got, ok)
+	}
+}
+
+func TestExpectedRejectsTheWrongScopeOrKind(t *testing.T) {
+	s := cliSuite(func(t *testing.T, c *Case) {})
+	sc, _ := s.schema()
+	cases, _ := parse(sc, s.Markers, "x.snap", []byte("### TITLE ###\nx\n### EXIT ###\n1\n"))
+
+	defer func() {
+		msg, _ := recover().(string)
+		if !strings.Contains(msg, "use ExpectedInt") {
+			t.Errorf("reading an Int channel as text should say so, got %v", msg)
+		}
+	}()
+	cases[0].Expected("EXIT")
+}

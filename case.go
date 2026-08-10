@@ -133,48 +133,102 @@ func (c *Case) Steps() []*Step { return c.steps }
 // leaving it unset asserts nothing. Setting it to "" asserts that it is empty.
 func (c *Case) Out(channel, value string) {
 	c.t.Helper()
-	o := c.checkOutput(channel, false, false)
+	o := c.checkOutput(channel, false, false, "OutInt")
 	c.actual[channel] = &outVal{text: value, raw: o.Raw}
 }
 
 // OutInt records an integer output channel.
 func (c *Case) OutInt(channel string, value int) {
 	c.t.Helper()
-	c.checkOutput(channel, false, true)
+	c.checkOutput(channel, false, true, "Out")
 	c.actual[channel] = &outVal{num: value}
 }
 
 // Out records a per-step output channel for this step.
 func (s *Step) Out(channel, value string) {
 	s.c.t.Helper()
-	o := s.c.checkOutput(channel, true, false)
+	o := s.c.checkOutput(channel, true, false, "OutInt")
 	s.actual[channel] = &outVal{text: value, raw: o.Raw}
 }
 
 // OutInt records an integer per-step output channel for this step.
 func (s *Step) OutInt(channel string, value int) {
 	s.c.t.Helper()
-	s.c.checkOutput(channel, true, true)
+	s.c.checkOutput(channel, true, true, "Out")
 	s.actual[channel] = &outVal{num: value}
 }
 
-// checkOutput validates a channel against the schema before the caller stores a
-// value in it: that it is declared an Output at all, that it is scoped where the
-// caller is setting it, and that the accessor matches its value kind.
-func (c *Case) checkOutput(channel string, perStep, wantInt bool) Output {
+// Expected returns what the case's file records for an output channel, and
+// whether the file carries that section at all.
+//
+// Absent is not the same as unasserted: a missing section asserts the channel's
+// zero value. The flag exists so a tool can tell the two apart, since only one
+// of them has a line to rewrite. Suites do not need this - a runner reports what
+// the system did and lets the engine compare - but a formatter, a linter, or a
+// review tool reading a pending file does.
+func (c *Case) Expected(channel string) (string, bool) {
+	c.t.Helper()
+	c.checkOutput(channel, false, false, "ExpectedInt")
+	v, ok := c.expected[channel]
+	if !ok {
+		return "", false
+	}
+	return v.text, true
+}
+
+// ExpectedInt is Expected for an Int channel.
+func (c *Case) ExpectedInt(channel string) (int, bool) {
+	c.t.Helper()
+	c.checkOutput(channel, false, true, "Expected")
+	v, ok := c.expected[channel]
+	if !ok {
+		return 0, false
+	}
+	return v.num, true
+}
+
+// Expected returns what the file records for a per-step channel on this step,
+// and whether the section is present.
+func (s *Step) Expected(channel string) (string, bool) {
+	s.c.t.Helper()
+	s.c.checkOutput(channel, true, false, "ExpectedInt")
+	v, ok := s.expected[channel]
+	if !ok {
+		return "", false
+	}
+	return v.text, true
+}
+
+// ExpectedInt is Expected for an Int channel.
+func (s *Step) ExpectedInt(channel string) (int, bool) {
+	s.c.t.Helper()
+	s.c.checkOutput(channel, true, true, "Expected")
+	v, ok := s.expected[channel]
+	if !ok {
+		return 0, false
+	}
+	return v.num, true
+}
+
+// checkOutput validates a channel against the schema on behalf of an accessor:
+// that it is declared an Output at all, that it is scoped where the accessor is
+// reaching, and that the accessor matches its value kind. instead names the
+// accessor that would have been right, which differs between reading and
+// writing and is the whole content of the message to whoever hit it.
+func (c *Case) checkOutput(channel string, perStep, wantInt bool, instead string) Output {
 	c.t.Helper()
 	o := c.mustOutput(channel)
 	if o.PerStep != perStep {
 		if o.PerStep {
-			c.fail("output %q is declared PerStep; set it on a Step, not the Case", channel)
+			c.fail("output %q is declared PerStep; it belongs to a Step, not the Case", channel)
 		}
-		c.fail("output %q is not declared PerStep; set it on the Case, not a Step", channel)
+		c.fail("output %q is not declared PerStep; it belongs to the Case, not a Step", channel)
 	}
 	if o.Int != wantInt {
 		if o.Int {
-			c.fail("output %q is declared Int; use OutInt", channel)
+			c.fail("output %q is declared Int; use %s", channel, instead)
 		}
-		c.fail("output %q is not declared Int; use Out", channel)
+		c.fail("output %q is not declared Int; use %s", channel, instead)
 	}
 	return o
 }

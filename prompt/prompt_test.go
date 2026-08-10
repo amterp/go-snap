@@ -1,4 +1,4 @@
-package radishsnap
+package prompt
 
 import (
 	"strings"

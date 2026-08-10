@@ -6,7 +6,7 @@ import (
 
 	"github.com/amterp/color"
 	snap "github.com/amterp/go-snap"
-	"github.com/amterp/go-snap/radishsnap"
+	"github.com/amterp/go-snap/prompt"
 	"github.com/amterp/radish"
 )
 
@@ -23,11 +23,11 @@ var pickerSuite = snap.Suite{
 	Run: runPicker,
 	Inputs: []snap.Input{
 		{Name: "OPTIONS", List: true},
-		radishsnap.KeysSection,
+		prompt.KeysSection,
 	},
 	Outputs: []snap.Output{
 		{Name: "CHOICE"},
-		radishsnap.FramesSection,
+		prompt.FramesSection,
 	},
 	Parallel: true,
 }
@@ -37,16 +37,16 @@ func TestPickerSnapshots(t *testing.T) {
 }
 
 func runPicker(t *testing.T, c *snap.Case) {
-	keys := c.List(radishsnap.KeysSection.Name)
+	keys := c.List(prompt.KeysSection.Name)
 
 	// A case with no KEYS gets the fail-loud driver rather than a real
 	// terminal, so a missing script is an immediate error instead of a hang.
-	var p prompter = radishsnap.NoKeys{}
+	var p prompter = prompt.NoKeys{}
 	var script *radish.ScriptDriver
 	if len(keys) > 0 {
-		d, err := radishsnap.Driver(keys)
+		d, err := prompt.Driver(keys)
 		if err != nil {
-			t.Fatalf("%s: %v", radishsnap.KeysSection.Name, err)
+			t.Fatalf("%s: %v", prompt.KeysSection.Name, err)
 		}
 		p, script = d, d
 	}
@@ -60,6 +60,6 @@ func runPicker(t *testing.T, c *snap.Case) {
 	// FRAMES is only asserted for cases that actually drove a prompt; a
 	// channel the runner leaves unset asserts nothing.
 	if script != nil {
-		c.Out(radishsnap.FramesSection.Name, radishsnap.RenderFrames(script))
+		c.Out(prompt.FramesSection.Name, prompt.RenderFrames(script))
 	}
 }
