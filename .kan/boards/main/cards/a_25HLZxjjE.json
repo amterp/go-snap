@@ -5,7 +5,7 @@
   "area": [
     "tooling"
   ],
-  "column": "next",
+  "column": "done",
   "created_at_millis": 1786328418730,
   "creator": "Alexander Terp",
   "description": "Nothing is published yet - no tag, nothing pushed. Everything upstream of a tag\nis free to break; everything after it is not.\n\nPrerequisites: the API is settled (see the review cards), the README teaches the\nmodel in one screen, and CI is green on linux/macos/windows.\n\nThe two ports (memri, rad LSP) are the acceptance test and both pass, so the\nrelease gate is about surface stability, not correctness.",
@@ -13,12 +13,13 @@
   "labels": [
     "ai-lo"
   ],
-  "position": "U",
+  "position": "UUUUUUUUUUUUUUU",
   "title": "Tag v0.1.0 and publish",
   "type": "chore",
-  "updated_at_millis": 1786342311122,
+  "updated_at_millis": 1786343313530,
   "history": [
     {"field":"column","value":"backlog-hi","at":1786328418730},
-    {"field":"column","value":"next","at":1786342311122}
+    {"field":"column","value":"next","at":1786342311122},
+    {"field":"column","value":"done","at":1786343313530}
   ]
 }
