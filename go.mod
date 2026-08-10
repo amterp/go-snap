@@ -1,11 +1,14 @@
 module github.com/amterp/go-snap
 
-go 1.26.1
+go 1.25.6
 
 require (
-	github.com/amterp/color v1.20.1 // indirect
-	github.com/amterp/go-delta v0.1.5 // indirect
-	github.com/amterp/radish v0.2.0 // indirect
+	github.com/amterp/color v1.20.1
+	github.com/amterp/go-delta v0.1.5
+	github.com/amterp/radish v0.2.0
+)
+
+require (
 	github.com/clipperhouse/uax29/v2 v2.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
