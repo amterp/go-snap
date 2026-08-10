@@ -6,7 +6,7 @@
     "api",
     "tooling"
   ],
-  "column": "backlog-hi",
+  "column": "done",
   "created_at_millis": 1786328600399,
   "creator": "Alexander Terp",
   "description": "ParseFile and WriteFile are exported \"for tooling\", but a caller outside the\npackage can only *preserve* output values, never inspect or change them. Verified\nby round-tripping a file through both: the bytes come back identical, so nothing\nis lost - but outVal and the expected/actual maps are unexported with no getters,\nso external code is blind to what it is carrying.\n\nThat is enough for a reformatter and not enough for the review tool that .snap.new\nis reserved for. A review tool has to read the accepted file's expected values,\nread the pending file's proposed values, render the difference, and write back\nwhichever the human picked. All four steps need a surface that does not exist.\n\nShape is open. Probably Case.Expected(channel) (string, bool) plus an Int variant\nand Step equivalents for reading, and something narrower than apply() for setting -\napply() promotes actual into expected and assumes a completed Suite.Run, which a\ntool has not got.\n\nDecide this before designing the review tool, not after: a tool built around the\ncurrent surface will grow a workaround that then has to be unpicked. Additive, so\nit does not block v0.1.0 - but the honest alternative is unexporting ParseFile and\nWriteFile until the story is real, rather than shipping a promise the API does not\nkeep.",
@@ -14,11 +14,12 @@
   "labels": [
     "from-review"
   ],
-  "position": "UUU",
+  "position": "UUUUUUUUUUUUU",
   "title": "Complete the tooling surface: read and set expected outputs",
   "type": "enhancement",
-  "updated_at_millis": 1786328600399,
+  "updated_at_millis": 1786342311039,
   "history": [
-    {"field":"column","value":"backlog-hi","at":1786328600399}
+    {"field":"column","value":"backlog-hi","at":1786328600399},
+    {"field":"column","value":"done","at":1786342311039}
   ]
 }

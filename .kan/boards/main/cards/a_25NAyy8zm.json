@@ -1,0 +1,24 @@
+{
+  "_v": 3,
+  "alias": "rename-radishsnap-to",
+  "alias_explicit": false,
+  "area": [
+    "adapters",
+    "api"
+  ],
+  "column": "done",
+  "created_at_millis": 1786342311089,
+  "creator": "Alexander Terp",
+  "description": "The import path named the library we drive prompts with instead of what the\npackage does. radish is how, not what.\n\nSignatures still name radish types deliberately: the package wraps radish, and\nhiding that behind our own types would cost a translation layer plus the suite's\naccess to the driver, to buy nothing until a second backend exists.",
+  "id": "a_25NAyy8zm",
+  "labels": [
+    "breaking"
+  ],
+  "position": "UUUUUUUUUUUUUU",
+  "title": "Rename radishsnap to prompt",
+  "type": "enhancement",
+  "updated_at_millis": 1786342311089,
+  "history": [
+    {"field":"column","value":"done","at":1786342311089}
+  ]
+}
