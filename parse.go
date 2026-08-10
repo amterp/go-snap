@@ -11,7 +11,7 @@ import (
 // tooling - editors, migration scripts, orphan reports - that wants to read
 // snapshot files without running them.
 func ParseFile(s *Suite, path string) ([]*Case, error) {
-	sc, err := s.schema()
+	sc, err := s.schemaFor(false)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func assemble(sc *schema, m Markers, path string, sections []section) ([]*Case, 
 				return nil, errf(s.line, "duplicate title %q (first defined at line %d)", title, prev)
 			}
 			titles[title] = s.line
-			c = newCase(sc, m, path)
+			c = newCase(sc, path)
 			c.title = title
 			c.titleLine = s.line
 			cases = append(cases, c)

@@ -1,6 +1,7 @@
 package snap
 
 import (
+	"flag"
 	"strings"
 	"testing"
 )
@@ -74,5 +75,34 @@ func TestEnvFallbackResolvesTargetsAndAll(t *testing.T) {
 	t.Setenv(envUpdate, "")
 	if got := resolveUpdate(); got.active() {
 		t.Errorf("no flags and no env should mean no update, got %+v", got)
+	}
+}
+
+func TestBoolUpdateFlagFromAnotherPackageIsRefused(t *testing.T) {
+	// Several Go snapshot libraries spell -update as a bool. Adopting one would
+	// read its value as the path substring "true", which matches almost nothing
+	// and occasionally the wrong thing - silently, either way.
+	saved := flag.CommandLine
+	t.Cleanup(func() { flag.CommandLine = saved })
+	flag.CommandLine = flag.NewFlagSet("test", flag.ContinueOnError)
+	flag.Bool(flagUpdate, false, "some other library's flag")
+
+	err := updateSpec{targets: []string{"errors"}, source: "-update"}.check()
+	if err == nil {
+		t.Fatal("expected a bool -update from another package to be refused")
+	}
+	if !strings.Contains(err.Error(), "boolean flag") {
+		t.Errorf("error = %v", err)
+	}
+}
+
+func TestStringUpdateFlagIsAdoptedQuietly(t *testing.T) {
+	saved := flag.CommandLine
+	t.Cleanup(func() { flag.CommandLine = saved })
+	flag.CommandLine = flag.NewFlagSet("test", flag.ContinueOnError)
+	flag.String(flagUpdate, "", "a compatible pre-existing flag")
+
+	if err := (updateSpec{targets: []string{"errors"}, source: "-update"}).check(); err != nil {
+		t.Errorf("a string -update is the shape go-snap needs: %v", err)
 	}
 }

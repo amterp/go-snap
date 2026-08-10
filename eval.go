@@ -135,7 +135,14 @@ func applyChannel(o Output, name string, expected, actual map[string]*outVal) {
 		delete(expected, name)
 		return
 	}
-	v := &outVal{num: act.num, text: act.text, raw: o.Raw || act.raw}
+	// A [raw] marker on this one section is hand-authored intent, and acceptance
+	// preserves hand-authored intent. Dropping it would silently relax the
+	// comparison the author asked for, with nothing in the diff to show it.
+	raw := o.Raw
+	if prev, had := expected[name]; had && prev.raw {
+		raw = true
+	}
+	v := &outVal{num: act.num, text: act.text, raw: raw}
 	if !v.raw {
 		v.text = strings.TrimRight(v.text, "\n")
 	}

@@ -147,9 +147,36 @@ type schema struct {
 	// reads the way the suite was declared.
 	inputOrder  []string
 	outputOrder []string
+
+	// actionOrder exists only to name a suite's actions in a diagnostic;
+	// actions are written in the order the file already has them.
+	actionOrder []string
 }
 
+// names lists the sections declared under one role, in declaration order, for
+// error messages that tell the reader what was available.
+func (sc *schema) names(k kind) []string {
+	switch k {
+	case kindInput:
+		return sc.inputOrder
+	case kindAction:
+		return sc.actionOrder
+	default:
+		return sc.outputOrder
+	}
+}
+
+// schema validates a runnable suite. Use schemaFor when the caller only reads
+// files and will never invoke the runner.
 func (s *Suite) schema() (*schema, error) {
+	return s.schemaFor(true)
+}
+
+// schemaFor compiles and validates the declarations. needsRun is false for the
+// read-only paths: ParseFile serves editors and migration scripts, and making
+// them stub a runner they never call is friction aimed at exactly the audience
+// the function exists for.
+func (s *Suite) schemaFor(needsRun bool) (*schema, error) {
 	sc := &schema{
 		inputs:  map[string]Input{},
 		actions: map[string]Action{},
@@ -197,6 +224,7 @@ func (s *Suite) schema() (*schema, error) {
 			problems = append(problems, fmt.Sprintf("action %q has Args %d; use -1 for variadic", a.Name, a.Args))
 		}
 		sc.actions[a.Name] = a
+		sc.actionOrder = append(sc.actionOrder, a.Name)
 	}
 	for _, o := range s.Outputs {
 		if !declare(o.Name, kindOutput) {
@@ -209,7 +237,7 @@ func (s *Suite) schema() (*schema, error) {
 		sc.outputOrder = append(sc.outputOrder, o.Name)
 	}
 
-	if s.Run == nil {
+	if needsRun && s.Run == nil {
 		problems = append(problems, "Suite.Run is nil")
 	}
 	if len(sc.outputs) == 0 {

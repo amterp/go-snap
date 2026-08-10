@@ -3,14 +3,12 @@ package snap
 import (
 	"fmt"
 	"strings"
-	"testing"
 )
 
 // Case is one snapshot case: its hand-authored inputs and steps, and the
 // output channels the runner sets.
 type Case struct {
-	sc      *schema
-	markers Markers
+	sc *schema
 
 	title       string
 	description string
@@ -31,9 +29,29 @@ type Case struct {
 
 	titleLine int
 	file      string // path as given to Run, for messages
-	t         *testing.T
+	t         caseT
 	ran       bool
-	dirty     bool
+}
+
+// caseT is the part of *testing.T the accessors need. It is never nil: a Case
+// built by ParseFile carries noTest instead, so every accessor can call
+// t.Helper() as one unconditional line. That matters more than it looks -
+// Helper marks the frame that calls it, so hiding it behind a nil check in some
+// shared helper would mark the helper and leave misuse messages pointing into
+// go-snap, which is the whole problem it exists to solve.
+type caseT interface {
+	Helper()
+	Fatalf(format string, args ...any)
+}
+
+// noTest stands in when a Case exists outside a run. There is no test to fail,
+// so misuse panics rather than returning a wrong answer to a tool.
+type noTest struct{}
+
+func (noTest) Helper() {}
+
+func (noTest) Fatalf(format string, args ...any) {
+	panic("snap: " + fmt.Sprintf(format, args...))
 }
 
 // Step is one occurrence of an Action within a case.
@@ -76,6 +94,7 @@ func (c *Case) Description() string { return c.description }
 // Has reports whether the case declares the given input section at all,
 // distinguishing a section present but empty from one that is absent.
 func (c *Case) Has(section string) bool {
+	c.t.Helper()
 	c.mustInput(section)
 	_, ok := c.inputs[section]
 	return ok
@@ -83,6 +102,7 @@ func (c *Case) Has(section string) bool {
 
 // Text returns an input section's body, or "" if absent.
 func (c *Case) Text(section string) string {
+	c.t.Helper()
 	in := c.mustInput(section)
 	if in.List {
 		c.fail("section %q is declared List; use List(%q) instead of Text", section, section)
@@ -95,6 +115,7 @@ func (c *Case) Text(section string) string {
 
 // List returns an input section's items, or nil if absent.
 func (c *Case) List(section string) []string {
+	c.t.Helper()
 	in := c.mustInput(section)
 	if !in.List {
 		c.fail("section %q is not declared List; use Text(%q) instead", section, section)
@@ -111,102 +132,103 @@ func (c *Case) Steps() []*Step { return c.steps }
 // Out records a case-scoped output channel. Setting a channel asserts it;
 // leaving it unset asserts nothing. Setting it to "" asserts that it is empty.
 func (c *Case) Out(channel, value string) {
-	o := c.mustOutput(channel)
-	if o.PerStep {
-		c.fail("output %q is declared PerStep; set it on a Step, not the Case", channel)
-	}
-	if o.Int {
-		c.fail("output %q is declared Int; use OutInt", channel)
-	}
+	c.t.Helper()
+	o := c.checkOutput(channel, false, false)
 	c.actual[channel] = &outVal{text: value, raw: o.Raw}
 }
 
 // OutInt records an integer output channel.
 func (c *Case) OutInt(channel string, value int) {
-	o := c.mustOutput(channel)
-	if o.PerStep {
-		c.fail("output %q is declared PerStep; set it on a Step, not the Case", channel)
-	}
-	if !o.Int {
-		c.fail("output %q is not declared Int; use Out", channel)
-	}
+	c.t.Helper()
+	c.checkOutput(channel, false, true)
 	c.actual[channel] = &outVal{num: value}
 }
 
 // Out records a per-step output channel for this step.
 func (s *Step) Out(channel, value string) {
-	o := s.c.mustOutput(channel)
-	if !o.PerStep {
-		s.c.fail("output %q is not declared PerStep; set it on the Case, not a Step", channel)
-	}
-	if o.Int {
-		s.c.fail("output %q is declared Int; use OutInt", channel)
-	}
+	s.c.t.Helper()
+	o := s.c.checkOutput(channel, true, false)
 	s.actual[channel] = &outVal{text: value, raw: o.Raw}
 }
 
 // OutInt records an integer per-step output channel for this step.
 func (s *Step) OutInt(channel string, value int) {
-	o := s.c.mustOutput(channel)
-	if !o.PerStep {
-		s.c.fail("output %q is not declared PerStep; set it on the Case, not a Step", channel)
-	}
-	if !o.Int {
-		s.c.fail("output %q is not declared Int; use Out", channel)
-	}
+	s.c.t.Helper()
+	s.c.checkOutput(channel, true, true)
 	s.actual[channel] = &outVal{num: value}
 }
 
+// checkOutput validates a channel against the schema before the caller stores a
+// value in it: that it is declared an Output at all, that it is scoped where the
+// caller is setting it, and that the accessor matches its value kind.
+func (c *Case) checkOutput(channel string, perStep, wantInt bool) Output {
+	c.t.Helper()
+	o := c.mustOutput(channel)
+	if o.PerStep != perStep {
+		if o.PerStep {
+			c.fail("output %q is declared PerStep; set it on a Step, not the Case", channel)
+		}
+		c.fail("output %q is not declared PerStep; set it on the Case, not a Step", channel)
+	}
+	if o.Int != wantInt {
+		if o.Int {
+			c.fail("output %q is declared Int; use OutInt", channel)
+		}
+		c.fail("output %q is not declared Int; use Out", channel)
+	}
+	return o
+}
+
 func (c *Case) mustInput(name string) Input {
+	c.t.Helper()
 	if in, ok := c.sc.inputs[name]; ok {
 		return in
 	}
-	c.fail("%q is not a declared Input; add it to Suite.Inputs%s", name, c.didYouMean(name))
+	c.fail("%q is not a declared Input; add it to Suite.Inputs%s", name, c.didYouMean(name, kindInput))
 	return Input{}
 }
 
 func (c *Case) mustOutput(name string) Output {
+	c.t.Helper()
 	if o, ok := c.sc.outputs[name]; ok {
 		return o
 	}
-	c.fail("%q is not a declared Output; add it to Suite.Outputs%s", name, c.didYouMean(name))
+	c.fail("%q is not a declared Output; add it to Suite.Outputs%s", name, c.didYouMean(name, kindOutput))
 	return Output{}
 }
 
-// didYouMean names the schema role a section was actually declared under, the
-// likeliest cause of an accessor mismatch.
-func (c *Case) didYouMean(name string) string {
-	k, ok := c.sc.kinds[name]
-	if !ok {
-		return ""
-	}
-	switch k {
-	case kindInput:
+// didYouMean explains a name the schema does not hold under the role the caller
+// used. A name declared under a different role is the likeliest mistake and gets
+// named outright; otherwise the declared names are listed, which for schemas
+// this size beats guessing at the nearest one.
+func (c *Case) didYouMean(name string, want kind) string {
+	switch k, ok := c.sc.kinds[name]; {
+	case !ok:
+	case k == kindInput:
 		return " (it is declared as an Input)"
-	case kindAction:
+	case k == kindAction:
 		return " (it is declared as an Action)"
 	default:
 		return " (it is declared as an Output)"
 	}
-}
-
-// fail reports a suite-authoring mistake. During a run that is a test failure;
-// outside one (tooling calling the accessors) there is no test to fail, so it
-// panics rather than returning a wrong answer.
-func (c *Case) fail(format string, args ...any) {
-	msg := fmt.Sprintf(format, args...)
-	if c.t != nil {
-		c.t.Helper()
-		c.t.Fatalf("%s: case %q: %s", c.file, c.title, msg)
+	declared := c.sc.names(want)
+	if len(declared) == 0 {
+		return ""
 	}
-	panic(fmt.Sprintf("snap: %s: case %q: %s", c.file, c.title, msg))
+	return fmt.Sprintf("; the suite declares %s", strings.Join(declared, ", "))
 }
 
-func newCase(sc *schema, m Markers, file string) *Case {
+// fail reports a suite-authoring mistake against the line that made it.
+func (c *Case) fail(format string, args ...any) {
+	c.t.Helper()
+	c.t.Fatalf("%s: case %q: %s", c.file, c.title, fmt.Sprintf(format, args...))
+}
+
+func newCase(sc *schema, file string) *Case {
 	return &Case{
 		sc:       sc,
-		markers:  m,
 		file:     file,
+		t:        noTest{},
 		inputs:   map[string]*inputVal{},
 		expected: map[string]*outVal{},
 		actual:   map[string]*outVal{},

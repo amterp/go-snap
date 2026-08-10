@@ -2,6 +2,7 @@ package snap
 
 import (
 	"bytes"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -59,24 +60,36 @@ func Run(t *testing.T, dir string, s *Suite) {
 	}
 
 	paths, err := discover(dir)
-	if err != nil {
+	switch {
+	case os.IsNotExist(err):
+		t.Fatalf("no snapshot directory at %s - Run's dir argument is relative to the test's package directory, so check the path or create the directory and add a %s file", dir, Ext)
+	case err != nil:
 		t.Fatalf("reading snapshots under %s: %v", dir, err)
-	}
-	if len(paths) == 0 {
+	case len(paths) == 0:
 		t.Fatalf("no %s files under %s - snapshot suites are declared by their files, so an empty directory is a misconfiguration", Ext, dir)
 	}
 
+	// Every unreadable file is reported together. Failing on the first one
+	// means fixing it only to discover the next, which costs a whole run per
+	// broken file - the same reason schema() collects its problems.
 	states := make([]*fileState, 0, len(paths))
+	var broken []string
 	for _, path := range paths {
 		data, err := os.ReadFile(path)
 		if err != nil {
-			t.Fatalf("reading %s: %v", path, err)
+			broken = append(broken, fmt.Sprintf("reading %s: %v", path, err))
+			continue
 		}
 		cases, err := parse(sc, s.Markers, path, data)
 		if err != nil {
-			t.Fatal(err)
+			broken = append(broken, err.Error())
+			continue
 		}
 		states = append(states, &fileState{path: path, orig: data, cases: cases, updating: upd.matches(path)})
+	}
+	if len(broken) > 0 {
+		t.Fatalf("%d of %d snapshot files could not be read:\n  - %s",
+			len(broken), len(paths), strings.Join(broken, "\n  - "))
 	}
 
 	// Rewriting on cleanup is what makes Parallel safe: Go runs a test's
@@ -160,7 +173,6 @@ func runCase(t *testing.T, rep reporter, s *Suite, sc *schema, c *Case, rel stri
 	c.ran = true
 
 	mismatches := eval(sc, c)
-	c.dirty = len(mismatches) > 0
 	if updating {
 		return
 	}

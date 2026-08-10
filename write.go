@@ -12,7 +12,7 @@ import (
 // write somewhere other than where it read - the seam a pending-snapshot
 // workflow would need.
 func WriteFile(s *Suite, path string, cases []*Case) error {
-	sc, err := s.schema()
+	sc, err := s.schemaFor(false)
 	if err != nil {
 		return err
 	}
@@ -93,6 +93,12 @@ func writeOutputs(b *strings.Builder, sc *schema, m Markers, vals map[string]*ou
 // case the section is omitted: an absent output section already means "the
 // channel's zero value".
 func isDefault(o Output, v *outVal) bool {
+	// A [raw] marker is information even when the value is empty: absence would
+	// assert "empty after trailing newlines are forgiven", which is a weaker
+	// claim than the one the marker was written to make.
+	if v.raw && !o.Raw {
+		return false
+	}
 	if o.Int {
 		return v.num == 0
 	}

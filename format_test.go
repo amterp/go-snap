@@ -417,7 +417,7 @@ oops
 func TestWriteEscapesUnrepresentableLines(t *testing.T) {
 	s := testSuite()
 	sc, _ := s.schema()
-	c := newCase(sc, s.Markers, "test.snap")
+	c := newCase(sc, "test.snap")
 	c.title = "escaping"
 	c.expected["STDOUT"] = &outVal{text: "ok\n### TITLE ###\ntrailing  \n\\\"already\""}
 

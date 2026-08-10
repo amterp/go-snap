@@ -87,6 +87,9 @@ func resolveUpdate() updateSpec {
 
 // check catches the two ways an update request is usually a mistake.
 func (u updateSpec) check() error {
+	if err := checkAdoptedFlag(); err != nil {
+		return err
+	}
 	for _, target := range u.targets {
 		// -update takes a value, so `-update -run TestFoo` makes the flag
 		// parser swallow -run as that value and quietly rewrite everything
@@ -108,6 +111,28 @@ func (u updateSpec) check() error {
 			u.source, envCI, envUpdateCI)
 	}
 	return nil
+}
+
+// checkAdoptedFlag rejects a pre-existing -update that is not string-valued.
+//
+// Adoption exists so a repo that already had its own -update keeps one flag
+// rather than two. But several Go snapshot libraries spell it as a bool, and a
+// bool reaches us as the literal string "true" - a path substring that matches
+// every file whose path happens to contain "true", and no files otherwise. A
+// flag that rewrites files must not fail that quietly.
+func checkAdoptedFlag() error {
+	f := flag.Lookup(flagUpdate)
+	if f == nil {
+		return nil
+	}
+	bf, ok := f.Value.(interface{ IsBoolFlag() bool })
+	if !ok || !bf.IsBoolFlag() {
+		return nil
+	}
+	return fmt.Errorf("another package registered -%s as a boolean flag, and go-snap needs it to carry path substrings.\n"+
+		"Its value would be read as the literal %q and matched against snapshot paths, so updates would silently target the wrong files.\n"+
+		"Rename the other flag, or drive go-snap through %s=<path-substr> instead.",
+		flagUpdate, "true", envUpdate)
 }
 
 func splitTargets(v string) []string {

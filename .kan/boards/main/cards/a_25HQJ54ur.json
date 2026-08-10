@@ -1,0 +1,24 @@
+{
+  "_v": 3,
+  "alias": "remove-dead-fields",
+  "alias_explicit": false,
+  "area": [
+    "api"
+  ],
+  "column": "next",
+  "created_at_millis": 1786328600476,
+  "creator": "Alexander Terp",
+  "description": "Case.markers (case.go:13) is set in newCase and read nowhere. Case.dirty\n(case.go:36) is written in runCase and read nowhere.\n\nBoth cost a reader the time it takes to work out whether they matter. Delete them,\nand if dirty was reaching for something - a summary of which files changed under\nupdate, say - that belongs in a card of its own rather than a field waiting to be\nnoticed.",
+  "id": "a_25HQJ54ur",
+  "labels": [
+    "from-review",
+    "ai-hi"
+  ],
+  "position": "U",
+  "title": "Remove dead fields Case.markers and Case.dirty",
+  "type": "chore",
+  "updated_at_millis": 1786328600476,
+  "history": [
+    {"field":"column","value":"next","at":1786328600476}
+  ]
+}

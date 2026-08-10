@@ -293,3 +293,65 @@ func TestAccessorMisuseAcrossKindsIsExplained(t *testing.T) {
 	}()
 	cases[0].Text("STDOUT")
 }
+
+// A [raw] marker on one section is the author saying "these bytes exactly".
+// Acceptance regenerates the value; it must not also relax the comparison, since
+// nothing in the diff would show that it had.
+func TestUpdateKeepsPerInstanceRawMarker(t *testing.T) {
+	s := cliSuite(func(t *testing.T, c *Case) { c.Out("STDOUT", "kept  \n") })
+	sc, err := s.schema()
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := "### TITLE ###\nx\n### STDOUT [raw] ###\n\"was  \\n\"\n"
+	cases, err := parse(sc, s.Markers, "x.snap", []byte(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	runCase(t, &fakeReporter{}, s, sc, cases[0], "x.snap", true)
+	apply(sc, cases[0])
+
+	out := string(render(sc, s.Markers, cases))
+	if !strings.Contains(out, "### STDOUT "+rawFlag+" ###") {
+		t.Errorf("the raw marker was dropped by the update:\n%s", out)
+	}
+	if !strings.Contains(out, `"kept  \n"`) {
+		t.Errorf("the accepted value is not stored raw:\n%s", out)
+	}
+
+	round, err := parse(sc, s.Markers, "x.snap", []byte(out))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !round[0].expected["STDOUT"].raw {
+		t.Error("the rewritten file no longer compares STDOUT byte-exactly")
+	}
+}
+
+// An empty raw section still asserts something absence does not: exactly empty,
+// with no trailing-newline forgiveness. So it survives a rewrite.
+func TestUpdateKeepsAnEmptyRawSection(t *testing.T) {
+	s := cliSuite(func(t *testing.T, c *Case) { c.Out("STDOUT", "") })
+	sc, _ := s.schema()
+	cases, _ := parse(sc, s.Markers, "x.snap", []byte("### TITLE ###\nx\n### STDOUT [raw] ###\n\"\"\n"))
+	runCase(t, &fakeReporter{}, s, sc, cases[0], "x.snap", true)
+	apply(sc, cases[0])
+
+	if out := string(render(sc, s.Markers, cases)); !strings.Contains(out, rawFlag) {
+		t.Errorf("an empty raw section was dropped, weakening the assertion:\n%s", out)
+	}
+}
+
+func TestUndeclaredSectionListsWhatIsDeclared(t *testing.T) {
+	s := cliSuite(func(t *testing.T, c *Case) {})
+	sc, _ := s.schema()
+	cases, _ := parse(sc, s.Markers, "x.snap", []byte("### TITLE ###\nx\n"))
+
+	defer func() {
+		msg, _ := recover().(string)
+		if !strings.Contains(msg, "the suite declares ARGS") {
+			t.Errorf("a typo'd name should be answered with the declared ones, got %v", msg)
+		}
+	}()
+	cases[0].Text("ARGSS")
+}

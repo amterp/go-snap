@@ -1,0 +1,24 @@
+{
+  "_v": 3,
+  "alias": "accessor-misuse",
+  "alias_explicit": false,
+  "area": [
+    "api"
+  ],
+  "column": "next",
+  "created_at_millis": 1786328711643,
+  "creator": "Alexander Terp",
+  "description": "Calling c.Text() on a List-declared section reports:\n\n    case.go:88: snapshots/cli/basic.snap: case \"greets a name\": section \"ARGS\"\n    is declared List; use List(\"ARGS\") instead of Text\n\nThe line the reader needs is in their own test file. They get ours.\n\nfail() calls t.Helper(), but frame-skipping only works if every function in the\nchain is marked, so the walk stops at the first unmarked frame out - Text itself.\nEvery misuse path lands this way: wrong accessor, undeclared section, output set\non the wrong scope.\n\nThis is the one place the library breaks its own promise that a failure carries\npath:line to the spot you edit. Everywhere else it holds.\n\nFix: mark Has, Text, List, Out, OutInt on Case, Out/OutInt on Step, and\nmustInput/mustOutput. Guard the nil case - a Case from ParseFile has no *testing.T,\nso an unguarded t.Helper() would panic on the happy path for exactly the tooling\naudience ParseFile exists to serve. fail() already guards it; reuse that shape.",
+  "id": "a_25HTCOaVK",
+  "labels": [
+    "from-review",
+    "ai-hi"
+  ],
+  "position": "UU",
+  "title": "Accessor misuse errors point into go-snap instead of the test file",
+  "type": "bug",
+  "updated_at_millis": 1786328711643,
+  "history": [
+    {"field":"column","value":"next","at":1786328711643}
+  ]
+}

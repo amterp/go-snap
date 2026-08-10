@@ -1,0 +1,24 @@
+{
+  "_v": 3,
+  "alias": "adopting-a-foreign",
+  "alias_explicit": false,
+  "area": [
+    "runner"
+  ],
+  "column": "backlog-hi",
+  "created_at_millis": 1786328600439,
+  "creator": "Alexander Terp",
+  "description": "init() registers -update only when flag.Lookup finds nothing, so a pre-existing\n-update is adopted instead. That is deliberate - rad already had one - but the\nadoption is unchecked.\n\nIf the flag already there is a bool (goldie and cupaloy both use -update, and a\nmigration onto go-snap is exactly when both would be present), lookupString reads\nits value as the string \"true\", which becomes a path substring, which matches\nevery snapshot file whose path contains \"true\". Usually that is none, so updates\nsilently do nothing; occasionally it is some, so updates silently apply to the\nwrong files. Neither says a word.\n\nFix: on adoption, test the existing flag for the IsBoolFlag() marker interface and\nfail loudly with what was found and what go-snap needs. A collision is rare, but\nits current failure mode is invisible, which is the wrong trade for a flag that\nrewrites files.",
+  "id": "a_25HQJ1fAk",
+  "labels": [
+    "from-review",
+    "ai-hi"
+  ],
+  "position": "UUUU",
+  "title": "Adopting a foreign -update flag fails silently when types disagree",
+  "type": "bug",
+  "updated_at_millis": 1786328600439,
+  "history": [
+    {"field":"column","value":"backlog-hi","at":1786328600439}
+  ]
+}

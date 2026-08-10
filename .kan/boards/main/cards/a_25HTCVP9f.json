@@ -1,0 +1,25 @@
+{
+  "_v": 3,
+  "alias": "accepting-an-update",
+  "alias_explicit": false,
+  "area": [
+    "eval",
+    "format"
+  ],
+  "column": "next",
+  "created_at_millis": 1786328711719,
+  "creator": "Alexander Terp",
+  "description": "A section marked '### STDOUT [raw] ###' asks for byte-exact comparison on that\none instance. parse.go:187 reads the flag and eval.go:91 honors it - but\neval.go:138 rebuilds the accepted value as 'o.Raw || act.raw', and act.raw is\nonly ever o.Raw copied back. The instance flag is not in that expression.\n\nSo comparison respects the marker and acceptance throws it away. Run -update once\nand the section silently downgrades to newline-forgiving comparison, with nothing\nin the diff to say it happened. The next real trailing-whitespace regression\npasses.\n\nHand-authored intent must survive a rewrite - that is the rule the whole update\npath is built on, and this is the one place it leaks. Carry the instance flag\nthrough apply, and cover it in the fuzz round trip, which does not currently\nexercise [raw] at all.",
+  "id": "a_25HTCVP9f",
+  "labels": [
+    "corruption-risk",
+    "ai-lo"
+  ],
+  "position": "UUUU",
+  "title": "Accepting an update erases a hand-written [raw] marker",
+  "type": "bug",
+  "updated_at_millis": 1786328711719,
+  "history": [
+    {"field":"column","value":"next","at":1786328711719}
+  ]
+}
