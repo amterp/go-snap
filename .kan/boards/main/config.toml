@@ -1,4 +1,4 @@
-kan_schema = "board/12"
+kan_schema = "board/14"
 id = "b_25HGU8cpv"
 name = "main"
 default_column = "backlog-lo"
@@ -7,11 +7,13 @@ default_column = "backlog-lo"
   name = "backlog-lo"
   color = "#6b7280"
   description = "Worth doing eventually. Nice-to-haves, speculative ideas, and anything that can wait for a real user to ask for it."
+  limit = 0
 
 [[columns]]
   name = "backlog-hi"
   color = "#3b82f6"
   description = "Committed work that should land before v1.0. Not scheduled yet, but not optional either."
+  limit = 0
 
 [[columns]]
   name = "next"
@@ -29,38 +31,9 @@ default_column = "backlog-lo"
   name = "done"
   color = "#9333ea"
   description = "Finished and verified: code merged, tests green, docs updated where the change needed them."
+  limit = 0
 
 [custom_fields]
-  [custom_fields.type]
-    type = "enum"
-    wanted = true
-    description = "The kind of work this card represents"
-
-    [[custom_fields.type.options]]
-      value = "bug"
-      color = "#dc2626"
-      description = "A defect: wrong behavior, a crash, or snapshot corruption"
-
-    [[custom_fields.type.options]]
-      value = "feature"
-      color = "#16a34a"
-      description = "New capability the library does not have yet"
-
-    [[custom_fields.type.options]]
-      value = "enhancement"
-      color = "#2563eb"
-      description = "An improvement to something that already works"
-
-    [[custom_fields.type.options]]
-      value = "docs"
-      color = "#0891b2"
-      description = "README, godoc, examples, or the format specification"
-
-    [[custom_fields.type.options]]
-      value = "chore"
-      color = "#4b5563"
-      description = "Maintenance, refactoring, CI, release plumbing"
-
   [custom_fields.area]
     type = "enum-set"
     description = "Which part of the library the card touches"
@@ -99,7 +72,6 @@ default_column = "backlog-lo"
       value = "tooling"
       color = "#a855f7"
       description = "CI, release, and anything built on ParseFile/WriteFile"
-
   [custom_fields.labels]
     type = "enum-set"
     description = "Workflow flags that cut across areas"
@@ -133,6 +105,35 @@ default_column = "backlog-lo"
       value = "ai-lo"
       color = "#eab308"
       description = "Probably suitable for AI, but needs review of the judgment calls"
+  [custom_fields.type]
+    type = "enum"
+    wanted = true
+    description = "The kind of work this card represents"
+
+    [[custom_fields.type.options]]
+      value = "bug"
+      color = "#dc2626"
+      description = "A defect: wrong behavior, a crash, or snapshot corruption"
+
+    [[custom_fields.type.options]]
+      value = "feature"
+      color = "#16a34a"
+      description = "New capability the library does not have yet"
+
+    [[custom_fields.type.options]]
+      value = "enhancement"
+      color = "#2563eb"
+      description = "An improvement to something that already works"
+
+    [[custom_fields.type.options]]
+      value = "docs"
+      color = "#0891b2"
+      description = "README, godoc, examples, or the format specification"
+
+    [[custom_fields.type.options]]
+      value = "chore"
+      color = "#4b5563"
+      description = "Maintenance, refactoring, CI, release plumbing"
 
 [card_display]
   type_indicator = "type"
@@ -142,3 +143,4 @@ default_column = "backlog-lo"
   name = "type-shortcut"
   pattern_title = "![a-zA-Z]+"
   command = ".kan/hooks/type-shortcut.rad"
+  timeout = 0
