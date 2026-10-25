@@ -9,6 +9,6 @@ name = "go-snap"
   emoji = ""
 
 [linked_boards]
-  [linked_boards.b_25NZSqFz2]
-    name = "rad/sprint"
+  [linked_boards.3d0a0ABE]
+    name = "rad/main"
     remote = "git@github.com:amterp/rad.git"
