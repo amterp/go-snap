@@ -14,7 +14,7 @@
     "corruption-risk",
     "from-review"
   ],
-  "position": "UUUUUUUUUUU",
+  "position": "aA",
   "title": "Update blessed output from a runner that called t.Errorf",
   "type": "bug",
   "updated_at_millis": 1786329928649,

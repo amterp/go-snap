@@ -15,7 +15,7 @@
     "corruption-risk",
     "ai-lo"
   ],
-  "position": "UUUUU",
+  "position": "a4",
   "title": "Accepting an update erases a hand-written [raw] marker",
   "type": "bug",
   "updated_at_millis": 1786329236190,

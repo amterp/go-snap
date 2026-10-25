@@ -14,7 +14,7 @@
     "from-review",
     "ai-hi"
   ],
-  "position": "UUU",
+  "position": "a2",
   "title": "Accessor misuse errors point into go-snap instead of the test file",
   "type": "bug",
   "updated_at_millis": 1786329236129,

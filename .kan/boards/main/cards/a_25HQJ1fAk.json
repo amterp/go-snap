@@ -14,7 +14,7 @@
     "from-review",
     "ai-hi"
   ],
-  "position": "U",
+  "position": "a0",
   "title": "Adopting a foreign -update flag fails silently when types disagree",
   "type": "bug",
   "updated_at_millis": 1786329236046,

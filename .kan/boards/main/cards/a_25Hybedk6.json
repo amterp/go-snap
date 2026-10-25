@@ -14,7 +14,7 @@
     "corruption-risk",
     "from-review"
   ],
-  "position": "UUUUUUUUU",
+  "position": "a8",
   "title": "Corrupting list writes: quote what the reader will decode",
   "type": "bug",
   "updated_at_millis": 1786329918942,

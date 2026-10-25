@@ -13,7 +13,7 @@
   "labels": [
     "from-review"
   ],
-  "position": "UUUUUUUUUUUU",
+  "position": "aB",
   "title": "Fuzzer missed the list corruption entirely",
   "type": "chore",
   "updated_at_millis": 1786329928687,

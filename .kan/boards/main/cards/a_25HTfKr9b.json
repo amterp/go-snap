@@ -15,7 +15,7 @@
     "from-review",
     "ai-hi"
   ],
-  "position": "UUUUUUU",
+  "position": "a6",
   "title": "ParseFile demands a Suite.Run it never calls",
   "type": "enhancement",
   "updated_at_millis": 1786329236246,

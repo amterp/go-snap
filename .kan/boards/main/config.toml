@@ -8,30 +8,35 @@ default_column = "backlog-lo"
   color = "#6b7280"
   description = "Worth doing eventually. Nice-to-haves, speculative ideas, and anything that can wait for a real user to ask for it."
   limit = 0
+  category = "idea"
 
 [[columns]]
   name = "backlog-hi"
   color = "#3b82f6"
   description = "Committed work that should land before v1.0. Not scheduled yet, but not optional either."
   limit = 0
+  category = "open"
 
 [[columns]]
   name = "next"
   color = "#f59e0b"
   description = "Ready to pick up now: scoped, unblocked, and understood well enough to start without further design."
   limit = 5
+  category = "open"
 
 [[columns]]
   name = "in-progress"
   color = "#10b981"
   description = "Actively being worked on. Keep this short - a long in-progress column means work is stalling, not flowing."
   limit = 3
+  category = "active"
 
 [[columns]]
   name = "done"
   color = "#9333ea"
   description = "Finished and verified: code merged, tests green, docs updated where the change needed them."
   limit = 0
+  category = "done"
 
 [custom_fields]
   [custom_fields.area]
@@ -144,3 +149,6 @@ default_column = "backlog-lo"
   pattern_title = "![a-zA-Z]+"
   command = ".kan/hooks/type-shortcut.rad"
   timeout = 0
+
+[ready]
+  exclude = ["labels=blocked"]

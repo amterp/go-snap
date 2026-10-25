@@ -14,7 +14,7 @@
     "from-review",
     "ai-hi"
   ],
-  "position": "UU",
+  "position": "a1",
   "title": "Remove dead fields Case.markers and Case.dirty",
   "type": "chore",
   "updated_at_millis": 1786329236075,

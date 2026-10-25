@@ -7,3 +7,8 @@ name = "go-snap"
   icon_type = "letter"
   letter = "G"
   emoji = ""
+
+[linked_boards]
+  [linked_boards.b_25NZSqFz2]
+    name = "rad/sprint"
+    remote = "git@github.com:amterp/rad.git"
